@@ -39,7 +39,7 @@ void LifecycleManager::elaborate()
     settings.setValue("frequency", 714000000);
     settings.setValue("bandwidth", 8000000);
 
-    if(m_deviceManager->configureDevice(0, &settings) > 0) {
+    if(m_deviceManager->configureDevice(0, &settings) == 0) {
         qDebug() << "Settings applied";
     }
 }

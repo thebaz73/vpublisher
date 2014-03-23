@@ -1,13 +1,27 @@
-#include <QCoreApplication>
 #include <cstdio>
 #include <cstdlib>
+#include <csignal>
+
 #include <QtDebug>
 #include <QtGlobal>
 #include <QDateTime>
+#include <QNetworkProxy>
+#include <QNetworkConfigurationManager>
+#include <QNetworkSession>
 
+#include "vpubdaemon.h"
 #include "dev/devicemanager.h"
 #include "hsl/hlsmanager.h"
 #include "lifecyclemanager.h"
+
+#include "vpublishingservice.h"
+#include "vpublishingservice_interface.h"
+
+#ifdef DBUS_USE_SESSION_BUS
+    #define  DBUS_MESSAGE_BUS QDBusConnection::sessionBus
+#else
+    #define  DBUS_MESSAGE_BUS QDBusConnection::systemBus
+#endif
 
 #define LOG_LEVEL 0
 //#define DETAILED_LOG
@@ -58,23 +72,87 @@ void logger(QtMsgType type, const QMessageLogContext &context, const QString &ms
     }
 }
 
+static QNetworkSession *g_networkSession = 0;
+
+struct CleanExit {
+    CleanExit() {
+        signal(SIGINT, &CleanExit::exitQt);
+        signal(SIGTERM, &CleanExit::exitQt);
+        signal(SIGSEGV, &CleanExit::exitQt);
+    }
+
+    static void exitQt(int sig) {
+        QCoreApplication::exit(sig);
+    }
+};
+
+static void setupNetwork() {
+    // Set Internet Access Point
+    QNetworkConfigurationManager mgr;
+    QList<QNetworkConfiguration> activeConfigs = mgr.allConfigurations();
+    if (activeConfigs.count() <= 0)
+        return;
+
+    QNetworkConfiguration cfg = activeConfigs.at(0);
+    foreach(QNetworkConfiguration config, activeConfigs) {
+        if (config.type() == QNetworkConfiguration::UserChoice) {
+            cfg = config;
+            break;
+        }
+    }
+
+    g_networkSession = new QNetworkSession(cfg);
+    g_networkSession->open();
+    g_networkSession->waitForOpened(-1);
+}
+
 int main(int argc, char *argv[])
 {
+    CleanExit exit;
+    Q_UNUSED(exit);
+
     qInstallMessageHandler(logger); //install : set the callback
-    QCoreApplication a(argc, argv);
 
-    DeviceManager deviceManager;
-    deviceManager.initialize();
+    VPubDaemon app(argc, argv);
+    app.setApplicationName("Video publisher");
+    app.setOrganizationName("Marco Bazzoni");
+    app.setOrganizationDomain("thebaz.it");
 
-    HLSManager hlsManager;
-    hlsManager.initialize();
+    if (app.arguments().contains("--help") || app.arguments().contains("-help") || app.arguments().contains("-h")) {
+        printf("%s Usage: vpubd\n", qPrintable(app.applicationName()));
 
-    LifecycleManager lifecycleManager;
-    lifecycleManager.setDeviceManager(&deviceManager);
-    lifecycleManager.setHlsManager(&hlsManager);
-    lifecycleManager.initialize();
+        return 0;
+    }
+    else {
+        setupNetwork();
+        bool primarySession = !app.isRunning();
+        if (!primarySession) {
+            qWarning() << app.applicationName() << "is already running, aborting";
+            return false;
+        }
+        DeviceManager deviceManager;
+        deviceManager.initialize();
 
+        HLSManager hlsManager;
+        hlsManager.initialize();
 
+        LifecycleManager lifecycleManager;
+        lifecycleManager.setDeviceManager(&deviceManager);
+        lifecycleManager.setHlsManager(&hlsManager);
+        lifecycleManager.initialize();
 
-    return a.exec();
+        VPublishingService *service = new VPublishingService();
+        service->setLifecycleManager(&lifecycleManager);
+        service->initialize();
+
+        new ServiceAdaptor(service);
+        QDBusConnection connection = DBUS_MESSAGE_BUS();
+        connection.registerObject("/vpub/daemon", service);
+        connection.registerService("vpub.daemon.dbus.service");
+
+        int ret = app.exec();
+
+        g_networkSession->close();
+        return ret;
+    }
 }

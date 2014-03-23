@@ -230,6 +230,83 @@ int DTVDevice::configure(DeviceSettings *settings)
     return retCode;
 }
 
+int DTVDevice::openDvbdemux(bool nonblocking)
+{
+    int flags = O_RDWR;
+    if (nonblocking)
+        flags |= O_NONBLOCK;
+
+    int demux_fd = open(qPrintable(demuxNode()), flags);
+    if(demux_fd < 0) {
+        qWarning("Error opening frontend %s: %d", qPrintable(demuxNode()), errno);
+    }
+
+    return demux_fd;
+}
+
+int DTVDevice::closeDvbdemux(int demux_fd)
+{
+    return close(demux_fd);
+}
+
+int DTVDevice::addPidFilter(int demux_fd, u_int16_t pid, bool start)
+{
+    int retCode = 0;
+    struct dmx_pes_filter_params filter;
+
+    memset(&filter, 0, sizeof(filter));
+    filter.pid = pid;
+    filter.input = DMX_IN_FRONTEND;
+    filter.output = DMX_OUT_TS_TAP;
+    filter.pes_type = DMX_PES_OTHER;
+    if (start) {
+        filter.flags |= DMX_IMMEDIATE_START;
+    }
+
+    if (ioctl(demux_fd, DMX_SET_PES_FILTER, &filter) == -1) {
+        qWarning("Error executing ioctl on %s: %d", qPrintable(demuxNode()), errno);
+        retCode = -1;
+    }
+
+    return retCode;
+}
+
+int DTVDevice::startDvbdemux(int demux_fd)
+{
+    return ioctl(demux_fd, DMX_START);
+}
+
+int DTVDevice::stopDvbdemux(int demux_fd)
+{
+    return ioctl(demux_fd, DMX_STOP);
+}
+
+int DTVDevice::openDvbdvr(bool readonly, bool nonblocking)
+{
+    int flags = O_RDWR;
+    if (readonly)
+        flags = O_RDONLY;
+    if (nonblocking)
+        flags |= O_NONBLOCK;
+
+    int dvr_fd = open(qPrintable(dvrNode()), flags);
+    if(dvr_fd < 0) {
+        qWarning("Error opening frontend %s: %d", qPrintable(dvrNode()), errno);
+    }
+
+    return dvr_fd;
+}
+
+int DTVDevice::closeDvbdvr(int dvr_fd)
+{
+    return close(dvr_fd);
+}
+
+int DTVDevice::readData(int fd, u_int8_t *data, size_t length)
+{
+    return read(fd, data, length);
+}
+
 void DTVDevice::showInfo(int dev_fd)
 {
     dvb_frontend_info* info = (dvb_frontend_info*)malloc(sizeof(dvb_frontend_info));

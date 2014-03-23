@@ -5,6 +5,32 @@
 #include <QDebug>
 #include <linux/dvb/frontend.h>
 
+#include <stdarg.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <sys/time.h>
+
+#define ERROR		0
+#define NOTICE		1
+#define INFO		2
+#define DEBUG		3
+
+#define print(x, y, z, fmt, arg...) do {				\
+    if (z) {							\
+        if	((x > ERROR) && (x > y))			\
+            vprint("%s: " fmt "\n", __func__ , ##arg);	\
+        else if	((x > NOTICE) && (x > y))			\
+            vprint("%s: " fmt "\n",__func__ , ##arg);	\
+        else if ((x > INFO) && (x > y))				\
+            vprint("%s: " fmt "\n", __func__ , ##arg);	\
+        else if ((x > DEBUG) && (x > y))			\
+            vprint("%s: " fmt "\n", __func__ , ##arg);	\
+    } else {							\
+        if (x > y)						\
+            vprint(fmt, ##arg);				\
+    }								\
+} while(0)
+
 typedef struct capabilities_s {
     fe_caps_t   cap;
     QString     value;
@@ -54,4 +80,29 @@ static inline QStringList capabilities(fe_caps_t  caps) {
     }
     return list;
 }
+
+static inline void vprint(const char *fmt, ...)
+{
+    va_list args;
+
+    va_start(args, fmt);
+    vfprintf(stderr, fmt, args);
+    va_end(args);
+}
+
+static inline int time_after(struct timeval oldtime, uint32_t delta_ms)
+{
+    // calculate the oldtime + add on the delta
+    uint64_t oldtime_ms = (oldtime.tv_sec * 1000) + (oldtime.tv_usec / 1000);
+    oldtime_ms += delta_ms;
+
+    // calculate the nowtime
+    struct timeval nowtime;
+    gettimeofday(&nowtime, 0);
+    uint64_t nowtime_ms = (nowtime.tv_sec * 1000) + (nowtime.tv_usec / 1000);
+
+    // check
+    return nowtime_ms > oldtime_ms;
+}
+
 #endif // COMMON_H
