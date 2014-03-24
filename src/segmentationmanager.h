@@ -11,7 +11,14 @@ class SegmentationManager : public QObject
 {
     Q_OBJECT
 public:
-    explicit SegmentationManager(QObject *parent = 0);
+    enum Type {
+        APPLE_HLS = 0,
+        MPEG_DASH
+    };
+
+    explicit SegmentationManager(Type type, QObject *parent = 0);
+
+    Type type() const;
 
     int adapterNumber() const;
     void setAdapterNumber(int adapterNumber);
@@ -29,6 +36,7 @@ signals:
 public slots:
     void onSegmenterExitCode(int exitCode);
 protected:
+    Type m_type;
     int m_adapter_no;
     int m_exit_code;
     QMap<PidType, u_int16_t> pids;

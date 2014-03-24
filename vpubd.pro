@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core dbus multimedia network
+QT       += core dbus network
 
 QT       -= gui
 
@@ -59,7 +59,8 @@ SOURCES += src/main.cpp \
     src/vpublishingservice.cpp \
     src/vpublishingservice_interface.cpp \
     src/configurationmanager.cpp \
-    src/segmentationmanager.cpp
+    src/segmentationmanager.cpp \
+    src/dash/dashmanager.cpp
 
 HEADERS += \
     src/hsl/hlsmanager.h \
@@ -82,21 +83,25 @@ HEADERS += \
     src/vpublishingservice_interface.h \
     src/vpublishingservice.h \
     src/configurationmanager.h \
-    src/segmentationmanager.h
+    src/segmentationmanager.h \
+    src/dash/dashmanager.h
 
 unix: CONFIG += link_pkgconfig
 unix: PKGCONFIG += libudev
 unix: PKGCONFIG += x264
+unix: PKGCONFIG += libavformat
+unix: PKGCONFIG += libavcodec
+unix: PKGCONFIG += libavutil
 
 unix:!macx: LIBS += -lm
 unix:!macx: LIBS += -lz
-unix:!macx: LIBS += -lbz2
-unix:!macx: LIBS += -lmp3lame
-unix:!macx: LIBS += -lfaad
-unix:!macx: LIBS += -lpthread
-unix:!macx: LIBS += -lavformat
-unix:!macx: LIBS += -lavcodec
-unix:!macx: LIBS += -lavutil
+#unix:!macx: LIBS += -lbz2
+#unix:!macx: LIBS += -lmp3lame
+#unix:!macx: LIBS += -lfaad
+#unix:!macx: LIBS += -lpthread
+#unix:!macx: LIBS += -lavformat
+#unix:!macx: LIBS += -lavcodec
+#unix:!macx: LIBS += -lavutil
 
 OTHER_FILES += \
     resources/dbus.sh \

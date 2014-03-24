@@ -3,7 +3,7 @@
 #include <QDebug>
 
 HLSManager::HLSManager(QObject *parent) :
-    SegmentationManager(parent),
+    SegmentationManager(APPLE_HLS, parent),
     m_segmenter(NULL),
     m_inputFilename(""),
     m_segmentLength(0),

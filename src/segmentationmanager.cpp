@@ -1,10 +1,16 @@
 #include "segmentationmanager.h"
 
-SegmentationManager::SegmentationManager(QObject *parent) :
+SegmentationManager::SegmentationManager(Type type, QObject *parent) :
     QObject(parent),
+    m_type(type),
     m_adapter_no(0),
     m_dtv_device(NULL)
 {
+}
+
+SegmentationManager::Type SegmentationManager::type() const
+{
+    return m_type;
 }
 
 int SegmentationManager::adapterNumber() const

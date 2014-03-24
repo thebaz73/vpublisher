@@ -124,9 +124,18 @@ bool ConfigurationManager::resetDefault()
 
 void ConfigurationManager::defaultValues()
 {
+    //General
     setValue("initialized", true);
+    setValue("hls_active", true);
+    setValue("dash_active", false);
+    //HSL
     setValue("hls","tmp_outdir", QDir::tempPath() + "/hls");
     setValue("hls","segment_length",15);
     setValue("hls","filename_prefix","hls_vpub");
-    setValue("hls","encoding_profile","");
+    setValue("hls","encoding_profile","128K");
+    //DASH
+    setValue("dash","tmp_outdir", QDir::tempPath() + "/dash");
+    setValue("dash","segment_length",15);
+    setValue("dash","filename_prefix","dash_vpub");
+    setValue("dash","encoding_profile","128K");
 }

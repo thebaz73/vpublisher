@@ -55,8 +55,11 @@ void LifecycleManager::elaborate()
     if(device->status() != DTVDevice::LOCKED && device->configure(&settings) == 0) {
         qDebug("Settings applied on device: %s", qPrintable(device->name()));
     }
+    if(device->status() != DTVDevice::LOCKED) {
+        qDebug("Settings applied on device: %s, but signal not locked.", qPrintable(device->name()));
+    }
 
-    if(device->status() == DTVDevice::LOCKED) {
+    if(device->status() == DTVDevice::LOCKED) {        
         m_segmentation_manager->setDtvDevice(device);
 
         m_segmentation_manager->setAdapterNumber(adapter_no);
