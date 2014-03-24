@@ -142,30 +142,30 @@ int Segmenter::exitCode() const
 void Segmenter::process()
 {
 #ifdef USING_PIPE
-    qDebug("Opening pipe: %s...\n", m_config.input_filename);
+    qDebug("Opening pipe: %s...", m_config.input_filename);
     m_exit_code = openPipe();
 #endif
 
 #ifdef USING_DEVICE
-    qDebug("Opening device: %s...\n", qPrintable(m_dtv_device->name()));
+    qDebug("Opening device: %s...", qPrintable(m_dtv_device->name()));
     m_exit_code = openDevice();
     m_exit_code = ((m_exit_code==0) ? configureDevice() : m_exit_code);
 #endif
 
     if(!m_exit_code) {
-        qDebug("Inizializing input...\n");
+        qDebug("Inizializing input...");
         m_exit_code = openInputContext();
-        qDebug("Inizializing output...\n");
+        qDebug("Inizializing output...");
         m_exit_code += openOutputContext();
 
 
         if(!m_exit_code && m_running) {
-            qDebug("Decoding...\n");
+            qDebug("Decoding...");
             m_exit_code = decode();
             if(!m_exit_code) {
-                qDebug("Writing segments...\n");
+                qDebug("Writing segments...");
                 m_exit_code += writeSegments();
-                qDebug("Finalizing...\n");
+                qDebug("Finalizing...");
                 finalize();
             }
         }
@@ -206,7 +206,7 @@ AVStream *Segmenter::addOutputStream(AVFormatContext *output_format_context, AVS
     output_stream = avformat_new_stream(output_format_context, 0);
     if (!output_stream)
     {
-        qWarning("Segmenter error: Could not allocate stream\n");
+        qWarning("Segmenter error: Could not allocate stream");
         return NULL;
     }
 
@@ -271,7 +271,7 @@ void Segmenter::outputTransferCommand(const unsigned int first_segment, const un
 
     sprintf(buffer, "%d, %d, %d, %s", first_segment, last_segment, end, encoding_profile);
 
-    qDebug("Segmenter: %s\n\r", buffer);
+    //qDebug("Segmenter: %s", buffer);
 }
 
 int Segmenter::openPipe()
@@ -329,7 +329,7 @@ int Segmenter::openInputContext()
 {
     m_input_format = av_find_input_format("mpegts");
     if (!m_input_format) {
-      qWarning("Segmenter error: Could not find MPEG-TS demuxer\n");
+      qWarning("Segmenter error: Could not find MPEG-TS demuxer");
       return 1;
     }
 
@@ -349,13 +349,13 @@ int Segmenter::openInputContext()
 
     int ret = avformat_open_input(&m_input_context, "dummy", m_input_format, NULL);
     if (ret != 0) {
-      qWarning("Segmenter error: Could not open input file, make sure it is an mpegts file: %d\n", ret);
+      qWarning("Segmenter error: Could not open input file, make sure it is an mpegts file: %d", ret);
       avPrintError(ret);
       return 4;
     }
 
     if (avformat_find_stream_info(m_input_context, NULL) < 0) {
-      qWarning("Segmenter error: Could not read stream information\n");
+      qWarning("Segmenter error: Could not read stream information");
       return 3;
     }
 
@@ -366,7 +366,7 @@ int Segmenter::openOutputContext()
 {
     m_output_format = av_guess_format("mpegts", NULL, NULL);
     if (!m_output_format) {
-        qWarning("Segmenter error: Could not find MPEG-TS muxer\n");
+        qWarning("Segmenter error: Could not find MPEG-TS muxer");
         return 1;
     }
 
@@ -406,7 +406,7 @@ int Segmenter::decode()
     }
 
 //    if (av_set_parameters(output_context, NULL) < 0) {
-//        qWarning("Segmenter error: Invalid output format parameters\n");
+//        qWarning("Segmenter error: Invalid output format parameters");
 //        return 1;
 //    }
 
@@ -416,12 +416,12 @@ int Segmenter::decode()
     {
       AVCodec *codec = avcodec_find_decoder(m_video_stream->codec->codec_id);
       if (!codec) {
-        qWarning("Segmenter error: Could not find video decoder, key frames will not be honored\n");
+        qWarning("Segmenter error: Could not find video decoder, key frames will not be honored");
         return 2;
       }
 
       if (avcodec_open2(m_video_stream->codec, codec, NULL) < 0) {
-        qWarning("Segmenter error: Could not open video decoder, key frames will not be honored\n");
+        qWarning("Segmenter error: Could not open video decoder, key frames will not be honored");
         return 3;
       }
     }
@@ -433,7 +433,7 @@ int Segmenter::writeSegments()
 {
     char *output_filename = (char *)malloc(sizeof(char) * (strlen(m_config.temp_directory) + 1 + strlen(m_config.filename_prefix) + 10));
     if (!output_filename) {
-        qWarning("Segmenter error: Could not allocate space for output filenames\n");
+        qWarning("Segmenter error: Could not allocate space for output filenames");
         return 1;
     }
 
@@ -442,13 +442,13 @@ int Segmenter::writeSegments()
 
     int ret = avio_open(&m_output_context->pb, output_filename, AVIO_FLAG_WRITE);
     if (ret < 0) {
-        qWarning("Segmenter error: Could not open '%s'\n", output_filename);
+        qWarning("Segmenter error: Could not open '%s'", output_filename);
         return 1;
     }
 
     ret = avformat_write_header(m_output_context, NULL);
     if (ret != 0) {
-        qWarning("Segmenter error: Could not write mpegts header to first output file\n");
+        qWarning("Segmenter error: Could not write mpegts header to first output file");
         return 1;
     }
 
@@ -498,7 +498,7 @@ int Segmenter::writeSegments()
             snprintf(output_filename, strlen(m_config.temp_directory) + 1 + strlen(m_config.filename_prefix) + 10, "%s/%s-%05u.ts", m_config.temp_directory, m_config.filename_prefix, output_index++);
             qDebug("Segmenter: Writing output to %s", output_filename);
             if (avio_open(&m_output_context->pb, output_filename, AVIO_FLAG_WRITE) < 0) {
-                qWarning("Segmenter error: Could not open '%s'\n", output_filename);
+                qWarning("Segmenter error: Could not open '%s'", output_filename);
                 retValue = 2;
                 break;
             }
@@ -508,10 +508,10 @@ int Segmenter::writeSegments()
 
         int ret = av_interleaved_write_frame(m_output_context, &packet);
         if (ret < 0) {
-            //qDebug("Segmenter error: Could not write frame of stream: (error_code=%d)\n", ret);
+            //qDebug("Segmenter error: Could not write frame of stream: (error_code=%d)", ret);
         }
         else if (ret > 0) {
-            qDebug("Segmenter info: End of stream requested\n");
+            qDebug("Segmenter info: End of stream requested");
             av_free_packet(&packet);
             break;
         }
@@ -526,7 +526,7 @@ int Segmenter::writeSegments()
 
 void Segmenter::finalize()
 {
-    qDebug("Segmenter info: Executing cleaning procedures\n");
+    qDebug("Segmenter info: Executing cleaning procedures");
     if (m_video_index >= 0)  {
         avcodec_close(m_video_stream->codec);
     }
@@ -550,5 +550,5 @@ void Segmenter::avPrintError(int err)
     if (av_strerror(err, buf, sizeof(*buf)) < 0)
         buf = strerror(AVUNERROR(err));
 
-    qDebug("AV error[%d]: %s\n", err, buf);
+    qDebug("AV error[%d]: %s", err, buf);
 }

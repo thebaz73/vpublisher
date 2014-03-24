@@ -123,7 +123,7 @@ void HLSManager::doSegmentation()
     QThread* thread = new QThread();
     m_segmenter->moveToThread(thread);
     connect(thread, SIGNAL(started()), m_segmenter, SLOT(process()));
-    connect(m_segmenter, SIGNAL(reportStatus(int)), this, SLOT(quit()));
+    connect(m_segmenter, SIGNAL(reportExitCode(int)), this, SLOT(onSegmenterExitCode(int)));
     connect(m_segmenter, SIGNAL(finished()), thread, SLOT(quit()));
     connect(m_segmenter, SIGNAL(finished()), m_segmenter, SLOT(deleteLater()));
     connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
