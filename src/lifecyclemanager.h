@@ -19,7 +19,6 @@ public:
 
     void setDeviceManager(DeviceManager *deviceManager);
     void setHlsManager(HLSManager *hlsManager);
-
 signals:
 
 public slots:
@@ -28,6 +27,7 @@ private:
     DeviceManager *m_deviceManager;
     HLSManager *m_hlsManager;
     QTimer m_timer;
+    QString m_outdir;
 };
 
 #endif // LIFECYCLEMANAGER_H

@@ -15,7 +15,8 @@
 #include "../utils/common.h"
 
 DTVDevice::DTVDevice(QObject *parent) :
-    QObject(parent)
+    QObject(parent),
+    m_synchronized(false)
 {
 }
 
@@ -271,6 +272,11 @@ int DTVDevice::addPidFilter(int demux_fd, u_int16_t pid, bool start)
     return retCode;
 }
 
+int DTVDevice::setDvbBuffer(int fd, int bufsize)
+{
+    return ioctl(fd, DMX_SET_BUFFER_SIZE, bufsize);
+}
+
 int DTVDevice::startDvbdemux(int demux_fd)
 {
     return ioctl(demux_fd, DMX_START);
@@ -302,15 +308,62 @@ int DTVDevice::closeDvbdvr(int dvr_fd)
     return close(dvr_fd);
 }
 
-int DTVDevice::readData(int fd, u_int8_t *data, size_t length)
+unsigned char *DTVDevice::readData(int fd, int *p_numReadPackets)
 {
-    return read(fd, data, length);
+    return readData(fd, p_numReadPackets, READ_TS_PACKET_SIZE);
 }
 
-void DTVDevice::showInfo(int dev_fd)
+unsigned char *DTVDevice::readData(int fd, int *p_numReadPackets, int length)
+{
+    if(!m_synchronized && skipGarbage(fd)) {
+        emit deviceSyncByteLoss(adapterNumber());
+    }
+    int numReadBytes = read(fd, ts_payload, TS_ENVELOPE_SIZE*length);
+    if (numReadBytes < TS_ENVELOPE_SIZE) {
+        return NULL;
+    }
+    *p_numReadPackets = numReadBytes/TS_ENVELOPE_SIZE;
+    for(int i=0; i<(*p_numReadPackets); i++){
+        if (ts_payload[TS_ENVELOPE_SIZE * i] != TS_SYNCH_BYTE) {
+            m_synchronized = false;
+            skipGarbage(fd);
+            return NULL;
+        }
+    }
+
+    return ts_payload;
+}
+
+bool DTVDevice::skipGarbage(int fd)
+{
+    int max_attempts = TS_ENVELOPE_SIZE * 5;
+    unsigned char sync_char;
+    unsigned char dummy_buffer[TS_ENVELOPE_SIZE];
+    bool isOk = false;
+    while((!isOk) && (max_attempts > 0)) {
+        do {
+            read(fd, &sync_char,1);
+            max_attempts--;
+        } while((sync_char != TS_SYNCH_BYTE) && (max_attempts > 0) ) ;
+
+        read(fd, dummy_buffer,TS_ENVELOPE_SIZE);
+        if(dummy_buffer[TS_ENVELOPE_SIZE-1] == TS_SYNCH_BYTE) {
+            read(fd, dummy_buffer,TS_ENVELOPE_SIZE-1);
+            isOk = true;
+        }
+    }
+    if(max_attempts == 0)
+        m_synchronized = false;
+    else
+        m_synchronized = true;
+
+    return m_synchronized;
+}
+
+void DTVDevice::showInfo(int fd)
 {
     dvb_frontend_info* info = (dvb_frontend_info*)malloc(sizeof(dvb_frontend_info));
-    if(ioctl(dev_fd, FE_GET_INFO, info) >= 0) {
+    if(ioctl(fd, FE_GET_INFO, info) >= 0) {
         qDebug() << "Device informations";
         qDebug() << "============================================================";
         qDebug() << "Name: " << info->name;

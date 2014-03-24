@@ -42,6 +42,16 @@ QList<DTVDevice *> DeviceManager::devices() const
     return m_devices.values();
 }
 
+DTVDevice *DeviceManager::getDevice(int adapterNumber) const
+{
+    DTVDevice *device = NULL;
+    if(m_devices.contains(adapterNumber)) {
+        device = m_devices.value(adapterNumber);
+    }
+
+    return device;
+}
+
 int DeviceManager::configureDevice(int adapterNumber, DeviceSettings *settings)
 {
     Q_ASSERT(m_devices.contains(adapterNumber));

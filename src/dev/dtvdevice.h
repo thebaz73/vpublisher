@@ -5,6 +5,7 @@
 #include <QMap>
 
 #include "devicesettings.h"
+#include "../utils/common.h"
 
 class DTVDevice : public QObject
 {
@@ -58,6 +59,7 @@ public:
     void setAdapterNumber(int adapterNumber);
 
 signals:
+    void deviceSyncByteLoss(int adapterNumber);
 
 public slots:
     int configure(DeviceSettings *settings);
@@ -87,7 +89,16 @@ public slots:
      * call startDvbdemux() manually.
      * @return 0 on success, nonzero on failure.
      */
-    int addPidFilter(int demux_fd, u_int16_t pid, bool start);
+    int addPidFilter(int demux_fd, u_int16_t pid, bool start);    
+    /**
+     * Change the internal buffer size used by the demuxer. The default buffer size
+     * is 8192 bytes. Can only be used if the demux in question is stopped.
+     *
+     * @param fd FD as opened with dvbdemux_open_demux() above.
+     * @param bufsize New buffer size to use.
+     * @return 0 on success, nonzero on failure.
+     */
+    int setDvbBuffer(int fd, int bufsize);
     /**
      * Start a demux going.
      *
@@ -127,11 +138,19 @@ public slots:
      * Reads data into buffer given a unix file descriptor
      *
      * @param fd FD as opened with openDvbdemux() or openDvbdvr() above.
-     * @param data pointer to read data buffer
-     * @param length length data buffer
-     * @return number of bytes read.
+     * @param p_numReadPackets pointer to number of bytes read
+     * @return bytes read.
      */
-    int readData(int fd, u_int8_t *data, size_t length);
+    unsigned char *readData(int fd, int *p_numReadPackets);
+    /**
+     * Reads data into buffer given a unix file descriptor
+     *
+     * @param fd FD as opened with openDvbdemux() or openDvbdvr() above.
+     * @param p_numReadPackets pointer to number of bytes read
+     * @param length current lenght
+     * @return bytes read.
+     */
+    unsigned char *readData(int fd, int *p_numReadPackets, int length);
 private:
     QString m_vendorId;
     QString m_productId;
@@ -143,8 +162,11 @@ private:
     QString m_devPath;
     QMap<NodeType, QString> m_nodePaths;
     int m_adapterNumber;
+    bool m_synchronized;
+    unsigned char ts_payload[TS_ENVELOPE_SIZE*READ_TS_PACKET_SIZE];
 
-    void showInfo(int dev_fd);
+    bool skipGarbage(int fd);
+    void showInfo(int fd);
 };
 
 #endif // DTVDEVICE_H

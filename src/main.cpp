@@ -10,6 +10,7 @@
 #include <QNetworkSession>
 
 #include "vpubdaemon.h"
+#include "configurationmanager.h"
 #include "dev/devicemanager.h"
 #include "hsl/hlsmanager.h"
 #include "lifecyclemanager.h"
@@ -118,7 +119,7 @@ int main(int argc, char *argv[])
     app.setOrganizationName("Marco Bazzoni");
     app.setOrganizationDomain("thebaz.it");
 
-    if (app.arguments().contains("--help") || app.arguments().contains("-help") || app.arguments().contains("-h")) {
+    if (app.arguments().contains("--help") || app.arguments().contains("-h")) {
         printf("%s Usage: vpubd\n", qPrintable(app.applicationName()));
 
         return 0;
@@ -130,15 +131,18 @@ int main(int argc, char *argv[])
             qWarning() << app.applicationName() << "is already running, aborting";
             return false;
         }
+
+        ConfigurationManager::instance()->initialize();
+
+#ifdef USING_DEVICE
         DeviceManager deviceManager;
         deviceManager.initialize();
-
-        HLSManager hlsManager;
-        hlsManager.initialize();
+#endif
 
         LifecycleManager lifecycleManager;
+#ifdef USING_DEVICE
         lifecycleManager.setDeviceManager(&deviceManager);
-        lifecycleManager.setHlsManager(&hlsManager);
+#endif
         lifecycleManager.initialize();
 
         VPublishingService *service = new VPublishingService();

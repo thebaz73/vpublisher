@@ -1,5 +1,5 @@
-#ifndef SSBT_ANALYZER_SERVICE_DBUS_ANALYSISSERVICE_H
-#define SSBT_ANALYZER_SERVICE_DBUS_ANALYSISSERVICE_H
+#ifndef VPUBLISHINGSERVICE_H
+#define VPUBLISHINGSERVICE_H
 
 #include <QObject>
 #include "lifecyclemanager.h"
@@ -20,4 +20,4 @@ private:
     LifecycleManager *m_lifecycle_manager;
 };
 
-#endif // SSBT_ANALYZER_DBUS_ANALYSISSERVICE_H
+#endif // VPUBLISHINGSERVICE_H

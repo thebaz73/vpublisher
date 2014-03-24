@@ -10,10 +10,10 @@
 #include <stdio.h>
 #include <sys/time.h>
 
-#define ERROR		0
-#define NOTICE		1
-#define INFO		2
-#define DEBUG		3
+#define ERROR                   0
+#define NOTICE                  1
+#define INFO                    2
+#define DEBUG                   3
 
 #define print(x, y, z, fmt, arg...) do {				\
     if (z) {							\
@@ -30,6 +30,31 @@
             vprint(fmt, ##arg);				\
     }								\
 } while(0)
+
+#define PAT_PID                     0
+#define NUM_PID                     8192
+#define TS_PACKET_SIZE              188
+#define TS_ENVELOPE_SIZE            256
+#define READ_TS_PACKET_SIZE         512
+#define TS_SYNCH_BYTE               0x47
+#define SEGMENTER_PKT_BUF_SIZE		188*174
+#define MAX_ANALYZE_DURATION        2147483647      //1000000
+#define MAX_INDEX_SIZE              2147483647      //4*1024*1024
+
+enum PidType {PMT_PID = 0, VIDEO_PID, AUDIO_PID};
+
+typedef struct config_info_s
+{
+  const char    *input_filename;
+  int           segment_length;
+  const char    *temp_directory;
+  const char    *filename_prefix;
+  const char    *encoding_profile;
+  u_int16_t     pmt_pid;
+  u_int16_t     video_pid;
+  u_int16_t     audio_pid;
+  size_t        dev_input_buffer;
+} config_info;
 
 typedef struct capabilities_s {
     fe_caps_t   cap;

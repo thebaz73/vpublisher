@@ -21,6 +21,7 @@ public:
 
     Status status() const;
     QList<DTVDevice *> devices() const;
+    DTVDevice *getDevice(int adapterNumber) const;
 
     int configureDevice(int adapterNumber, DeviceSettings *settings);
 signals:
