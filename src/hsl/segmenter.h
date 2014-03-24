@@ -28,10 +28,13 @@ public:
     DTVDevice *dtvDevice() const;
     void setDtvDevice(DTVDevice *dtvDevice);
 
+    unsigned int currentSegmentIndex() const;
+
     int doRead(quint8 *buf, int buf_size);
     qint64 doSeek(qint64 offset, int whence);
 
     int exitCode() const;
+
 signals:
     void finished();
     void reportExitCode(int exitCode);
@@ -65,6 +68,7 @@ private:
 
     unsigned int m_first_segment;
     unsigned int m_last_segment;
+    unsigned int m_current_segment_index;
 
     unsigned char *m_buffer;
     int m_input_fd;

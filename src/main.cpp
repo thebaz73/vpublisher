@@ -113,6 +113,11 @@ int main(int argc, char *argv[])
     Q_UNUSED(exit);
 
     qInstallMessageHandler(logger); //install : set the callback
+#ifdef USING_DEVICE
+#ifdef USING_PIPE
+    qFatal("Cannot run with both DEVICE and PIPE profile");
+#endif
+#endif
 
     VPubDaemon app(argc, argv);
     app.setApplicationName("Video publisher");

@@ -5,28 +5,16 @@
 HLSManager::HLSManager(QObject *parent) :
     SegmentationManager(parent),
     m_segmenter(NULL),
-    m_adapter_no(0),
     m_inputFilename(""),
     m_segmentLength(0),
     m_tempDirectory(""),
     m_filenamePrefix(""),
-    m_encodingProfile(""),
-    m_dtv_device(NULL)
+    m_encodingProfile("")
 {
 }
 
 HLSManager::~HLSManager()
 {
-}
-
-int HLSManager::adapterNumber() const
-{
-    return m_adapter_no;
-}
-
-void HLSManager::setAdapterNumber(int adapterNumber)
-{
-    m_adapter_no = adapterNumber;
 }
 
 QString HLSManager::inputFilename() const
@@ -79,19 +67,13 @@ void HLSManager::setEncodingProfile(const QString &encodingProfile)
     m_encodingProfile = encodingProfile;
 }
 
-DTVDevice *HLSManager::dtvDevice() const
+unsigned int HLSManager::currentSegmentIndex() const
 {
-    return m_dtv_device;
-}
+    if(!m_segmenter) {
+        return 0;
+    }
 
-void HLSManager::setDtvDevice(DTVDevice *dtv_device)
-{
-    m_dtv_device = dtv_device;
-}
-
-void HLSManager::addPid(PidType type, int pid)
-{
-    pids.insert(type, pid);
+    return m_segmenter->currentSegmentIndex();
 }
 
 void HLSManager::doSegmentation()
@@ -129,13 +111,6 @@ void HLSManager::doSegmentation()
     connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
     thread->start();
 }
-
-void HLSManager::onSegmenterExitCode(int exitCode)
-{
-    m_exit_code = exitCode;
-    emit finished();
-}
-
 
 
 

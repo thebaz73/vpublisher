@@ -3,11 +3,12 @@
 #include <QDir>
 
 #include "configurationmanager.h"
+#include "hsl/hlsmanager.h"
 
 LifecycleManager::LifecycleManager(QObject *parent) :
     QObject(parent),
     m_deviceManager(NULL),
-    m_hlsManager(NULL)
+    m_segmentation_manager(NULL)
 {
 }
 
@@ -21,8 +22,8 @@ void LifecycleManager::initialize()
 #ifdef USING_DEVICE
     Q_ASSERT(m_deviceManager);
 #endif
-    if(!m_hlsManager) {
-        m_hlsManager = new HLSManager(this);
+    if(!m_segmentation_manager) {
+        m_segmentation_manager = new HLSManager(this);
     }
     m_outdir = ConfigurationManager::instance()->value("hls","tmp_outdir", "/tmp/hls").toString();
     QDir dir(m_outdir);
@@ -40,11 +41,6 @@ void LifecycleManager::setDeviceManager(DeviceManager *deviceManager)
     m_deviceManager = deviceManager;
 }
 
-void LifecycleManager::setHlsManager(HLSManager *hlsManager)
-{
-    m_hlsManager = hlsManager;
-}
-
 void LifecycleManager::elaborate()
 {
     int adapter_no = 0;
@@ -60,28 +56,31 @@ void LifecycleManager::elaborate()
 
     DTVDevice *device = m_deviceManager->getDevice(adapter_no);
     if(device->status() == DTVDevice::LOCKED) {
-        m_hlsManager->setDtvDevice(device);
+        m_segmentation_manager->setDtvDevice(device);
 
-        m_hlsManager->setAdapterNumber(adapter_no);
-        m_hlsManager->setSegmentLength(ConfigurationManager::instance()->value("hls","segment_length", 15).toInt());
-        m_hlsManager->setTempDirectory(m_outdir);
-        m_hlsManager->setFilenamePrefix(ConfigurationManager::instance()->value("hls","filename_prefix", "hsl_vpub").toString());
-        m_hlsManager->setEncodingProfile(ConfigurationManager::instance()->value("hls","encoding_profile", "").toString());
-        m_hlsManager->addPid(PMT_PID, 1300);
-        m_hlsManager->addPid(VIDEO_PID, 1301);
-        m_hlsManager->addPid(AUDIO_PID, 1302);
+        m_segmentation_manager->setAdapterNumber(adapter_no);
+        ((HLSManager *)m_segmentation_manager)->setSegmentLength(ConfigurationManager::instance()->value("hls","segment_length", 15).toInt());
+        ((HLSManager *)m_segmentation_manager)->setTempDirectory(m_outdir);
+        ((HLSManager *)m_segmentation_manager)->setFilenamePrefix(ConfigurationManager::instance()->value("hls","filename_prefix", "hsl_vpub").toString());
+        ((HLSManager *)m_segmentation_manager)->setEncodingProfile(ConfigurationManager::instance()->value("hls","encoding_profile", "").toString());
+        m_segmentation_manager->addPid(PMT_PID, 1300);
+        m_segmentation_manager->addPid(VIDEO_PID, 1301);
+        m_segmentation_manager->addPid(AUDIO_PID, 1302);
 
-        m_hlsManager->doSegmentation();
+        m_segmentation_manager->doSegmentation();
     }
 #endif
 #ifdef USING_PIPE
-    m_hlsManager->setAdapterNumber(adapter_no);
-    m_hlsManager->setSegmentLength(ConfigurationManager::instance()->value("hls","segment_length").toInt());
-    m_hlsManager->setTempDirectory(m_outdir);
-    m_hlsManager->setFilenamePrefix(ConfigurationManager::instance()->value("hls","filename_prefix").toString());
-    m_hlsManager->setEncodingProfile(ConfigurationManager::instance()->value("hls","encoding_profile").toString());
-    m_hlsManager->setInputFilename(QString("/tmp/outputpipe%1.ts").arg(adapter_no));
+    m_segmentation_manager->setAdapterNumber(adapter_no);
+    ((HLSManager *)m_segmentation_manager)->setSegmentLength(ConfigurationManager::instance()->value("hls","segment_length").toInt());
+    ((HLSManager *)m_segmentation_manager)->setTempDirectory(m_outdir);
+    ((HLSManager *)m_segmentation_manager)->setFilenamePrefix(ConfigurationManager::instance()->value("hls","filename_prefix").toString());
+    ((HLSManager *)m_segmentation_manager)->setEncodingProfile(ConfigurationManager::instance()->value("hls","encoding_profile").toString());
+    ((HLSManager *)m_segmentation_manager)->setInputFilename(QString("/tmp/outputpipe%1.ts").arg(adapter_no));
+    m_segmentation_manager->addPid(PMT_PID, 1300);
+    m_segmentation_manager->addPid(VIDEO_PID, 1301);
+    m_segmentation_manager->addPid(AUDIO_PID, 1302);
 
-    m_hlsManager->doSegmentation();
+    m_segmentation_manager->doSegmentation();
 #endif
 }

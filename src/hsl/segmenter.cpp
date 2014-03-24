@@ -70,13 +70,19 @@ void Segmenter::setDtvDevice(DTVDevice *dtv_device)
     m_dtv_device = dtv_device;
 }
 
+unsigned int Segmenter::currentSegmentIndex() const
+{
+    return m_current_segment_index;
+}
+
 int Segmenter::doRead(quint8 *buf, int buf_size)
 {
-#ifdef USING_PIPE
     int packet_number = buf_size / TS_PACKET_SIZE;
     int packet_count = 0;
 
-    u_int8_t packet[TS_PACKET_SIZE];
+    unsigned char *packet;
+#ifdef USING_PIPE
+    packet = (unsigned char *)malloc(TS_PACKET_SIZE);
     while(packet_count <= packet_number) {
         int i_ret = read(m_input_fd, packet, TS_PACKET_SIZE);
         if(i_ret < 188 || i_ret == -1) break;
@@ -85,17 +91,9 @@ int Segmenter::doRead(quint8 *buf, int buf_size)
         }
         else {
             u_int16_t pid = ((u_int16_t)(packet[1] & 0x1f) << 8) + packet[2];
-            if(pid == 0) {
-                packet_count++
+            if(pid == PAT_PID || pid == m_config.pmt_pid || pid == m_config.video_pid || pid == m_config.audio_pid) {
+                packet_count++;
                 memcpy(&buf[packet_count * TS_PACKET_SIZE], packet, TS_PACKET_SIZE);
-            }
-            else {
-                for (int i = 0; i < m_config.num_filtered_pid; ++i) {
-                    packet_count++
-                    if(pid == m_config.filtered_pid[i]) {
-                        memcpy(&buf[packet_count * TS_PACKET_SIZE], packet, TS_PACKET_SIZE);
-                    }
-                }
             }
         }
     }
@@ -104,10 +102,6 @@ int Segmenter::doRead(quint8 *buf, int buf_size)
 #endif
 #ifdef USING_DEVICE
     int numReadPackets;
-    int packet_count;
-    int packet_number = buf_size / TS_PACKET_SIZE;
-
-    unsigned char *packet;
     unsigned char* buffer;
     do {
         buffer = m_dtv_device->readData(m_input_fd, &numReadPackets, buf_size);
@@ -195,7 +189,6 @@ void Segmenter::stop()
     }
     m_running = false;
 }
-
 
 AVStream *Segmenter::addOutputStream(AVFormatContext *output_format_context, AVStream *input_stream)
 {
@@ -437,8 +430,8 @@ int Segmenter::writeSegments()
         return 1;
     }
 
-    unsigned int output_index = 1;
-    snprintf(output_filename, strlen(m_config.temp_directory) + 1 + strlen(m_config.filename_prefix) + 10, "%s/%s-%05u.ts", m_config.temp_directory, m_config.filename_prefix, output_index++);
+    m_current_segment_index = 1;
+    snprintf(output_filename, strlen(m_config.temp_directory) + 1 + strlen(m_config.filename_prefix) + 10, "%s/%s-%05u.ts", m_config.temp_directory, m_config.filename_prefix, m_current_segment_index++);
 
     int ret = avio_open(&m_output_context->pb, output_filename, AVIO_FLAG_WRITE);
     if (ret < 0) {
@@ -495,7 +488,7 @@ int Segmenter::writeSegments()
 
             outputTransferCommand(m_first_segment, ++m_last_segment, 0, m_config.encoding_profile);
 
-            snprintf(output_filename, strlen(m_config.temp_directory) + 1 + strlen(m_config.filename_prefix) + 10, "%s/%s-%05u.ts", m_config.temp_directory, m_config.filename_prefix, output_index++);
+            snprintf(output_filename, strlen(m_config.temp_directory) + 1 + strlen(m_config.filename_prefix) + 10, "%s/%s-%05u.ts", m_config.temp_directory, m_config.filename_prefix, m_current_segment_index++);
             qDebug("Segmenter: Writing output to %s", output_filename);
             if (avio_open(&m_output_context->pb, output_filename, AVIO_FLAG_WRITE) < 0) {
                 qWarning("Segmenter error: Could not open '%s'", output_filename);

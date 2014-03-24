@@ -6,7 +6,7 @@
 #include <QMutex>
 
 #include "dev/devicemanager.h"
-#include "hsl/hlsmanager.h"
+#include "segmentationmanager.h"
 
 class LifecycleManager : public QObject
 {
@@ -18,14 +18,13 @@ public:
     void initialize();
 
     void setDeviceManager(DeviceManager *deviceManager);
-    void setHlsManager(HLSManager *hlsManager);
 signals:
 
 public slots:
     void elaborate();
 private:
     DeviceManager *m_deviceManager;
-    HLSManager *m_hlsManager;
+    SegmentationManager *m_segmentation_manager;
     QTimer m_timer;
     QString m_outdir;
 };

@@ -34,7 +34,7 @@ DEFINES +=USING_DEVICE="1"
 
 ########################################################################
 ## Da decommentare se si vuole compilare nel sistema embedded
-## DEFINES +=USING_PIPE="1"
+##DEFINES +=USING_PIPE="1"
 ########################################################################
 
 SOURCES += src/main.cpp \

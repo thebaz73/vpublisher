@@ -2,11 +2,9 @@
 #define HLSMANAGER_H
 
 #include <QObject>
-#include <QMap>
 
 #include "../segmentationmanager.h"
 #include "segmenter.h"
-#include "../dev/dtvdevice.h"
 
 class HLSManager : public SegmentationManager
 {
@@ -14,9 +12,6 @@ class HLSManager : public SegmentationManager
 public:
     explicit HLSManager(QObject *parent = 0);
     ~HLSManager();
-
-    int adapterNumber() const;
-    void setAdapterNumber(int adapterNumber);
 
     QString inputFilename() const;
     void setInputFilename(const QString &inputFilename);
@@ -33,26 +28,15 @@ public:
     QString encodingProfile() const;
     void setEncodingProfile(const QString &encodingProfile);
 
-    DTVDevice *dtvDevice() const;
-    void setDtvDevice(DTVDevice *dtvDevice);
-
-    void addPid(PidType type, int pid);
-
+    virtual unsigned int currentSegmentIndex() const;
     virtual void doSegmentation();
-public slots:
-    virtual void onSegmenterExitCode(int exitCode);
 private:
     Segmenter *m_segmenter;
-    int m_adapter_no;
     QString m_inputFilename;
     int m_segmentLength;
     QString m_tempDirectory;
     QString m_filenamePrefix;
-    QString m_encodingProfile;    
-
-    DTVDevice *m_dtv_device;
-    QMap<PidType, u_int16_t> pids;
-
+    QString m_encodingProfile;
 };
 
 #endif // HLSMANAGER_H
