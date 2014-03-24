@@ -18,8 +18,17 @@ public:
         NODE_TYPE_DEMUX,
         NODE_TYPE_NET
     };
+
+    enum DeviceStatus {
+        CONNECTED = 0,
+        CONFIGURED,
+        LOCKED
+    };
+
     explicit DTVDevice(QObject *parent = 0);
     ~DTVDevice();
+
+    DeviceStatus status() const;
 
     QString name() const;
 
@@ -57,7 +66,6 @@ public:
 
     int adapterNumber() const;
     void setAdapterNumber(int adapterNumber);
-
 signals:
     void deviceSyncByteLoss(int adapterNumber);
 
@@ -152,6 +160,7 @@ public slots:
      */
     unsigned char *readData(int fd, int *p_numReadPackets, int length);
 private:
+    DeviceStatus m_status;
     QString m_vendorId;
     QString m_productId;
     QString m_manufacturer;

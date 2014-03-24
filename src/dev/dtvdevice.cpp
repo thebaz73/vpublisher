@@ -16,12 +16,18 @@
 
 DTVDevice::DTVDevice(QObject *parent) :
     QObject(parent),
+    m_status(CONNECTED),
     m_synchronized(false)
 {
 }
 
 DTVDevice::~DTVDevice()
 {
+}
+
+DTVDevice::DeviceStatus DTVDevice::status() const
+{
+    return m_status;
 }
 
 QString DTVDevice::name() const
@@ -214,12 +220,14 @@ int DTVDevice::configure(DeviceSettings *settings)
                 Sleeper::msleep(100);
                 if(ioctl(dev_fd, FE_READ_STATUS, &status) >= 0) {
                     if(status == 31) {
+                        m_status = LOCKED;
                         qDebug("Device: %s signal locked (code: %d).", qPrintable(name()), status);
                         break;
                     }
                 }
             }
             if(status != 31) {
+                m_status = CONFIGURED;
                 qWarning("Device: %s signal not locked (code: %d).", qPrintable(name()), status);
                 retCode = -FE_HAS_LOCK;
             }

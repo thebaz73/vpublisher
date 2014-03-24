@@ -2,6 +2,8 @@
 #include <QDebug>
 #include <QDir>
 
+#include "configurationmanager.h"
+
 LifecycleManager::LifecycleManager(QObject *parent) :
     QObject(parent),
     m_deviceManager(NULL),
@@ -22,8 +24,8 @@ void LifecycleManager::initialize()
     if(!m_hlsManager) {
         m_hlsManager = new HLSManager(this);
     }
-    m_outdir = QDir::tempPath()+"/hls";
-    QDir dir(QDir::tempPath()+"/hls");
+    m_outdir = ConfigurationManager::instance()->value("hls","tmp_outdir", "/tmp/hls").toString();
+    QDir dir(m_outdir);
     if(!dir.exists()) {
         dir.mkpath(m_outdir);
     }
@@ -54,15 +56,17 @@ void LifecycleManager::elaborate()
 
     if(m_deviceManager->configureDevice(adapter_no, &settings) == 0) {
         qDebug() << "Settings applied";
+    }
 
-        DTVDevice *device = m_deviceManager->getDevice(adapter_no);
+    DTVDevice *device = m_deviceManager->getDevice(adapter_no);
+    if(device->status() == DTVDevice::LOCKED) {
         m_hlsManager->setDtvDevice(device);
 
         m_hlsManager->setAdapterNumber(adapter_no);
-        m_hlsManager->setSegmentLength(15);
+        m_hlsManager->setSegmentLength(ConfigurationManager::instance()->value("hls","segment_length", 15).toInt());
         m_hlsManager->setTempDirectory(m_outdir);
-        m_hlsManager->setFilenamePrefix("hls_vpub");
-        m_hlsManager->setEncodingProfile("ep_128k");
+        m_hlsManager->setFilenamePrefix(ConfigurationManager::instance()->value("hls","filename_prefix", "hsl_vpub").toString());
+        m_hlsManager->setEncodingProfile(ConfigurationManager::instance()->value("hls","encoding_profile", "").toString());
         m_hlsManager->addPid(PMT_PID, 1300);
         m_hlsManager->addPid(VIDEO_PID, 1301);
         m_hlsManager->addPid(AUDIO_PID, 1302);
@@ -72,10 +76,10 @@ void LifecycleManager::elaborate()
 #endif
 #ifdef USING_PIPE
     m_hlsManager->setAdapterNumber(adapter_no);
-    m_hlsManager->setSegmentLength(15);
+    m_hlsManager->setSegmentLength(ConfigurationManager::instance()->value("hls","segment_length").toInt());
     m_hlsManager->setTempDirectory(m_outdir);
-    m_hlsManager->setFilenamePrefix("hls_vpub");
-    m_hlsManager->setEncodingProfile("ep_128k");
+    m_hlsManager->setFilenamePrefix(ConfigurationManager::instance()->value("hls","filename_prefix").toString());
+    m_hlsManager->setEncodingProfile(ConfigurationManager::instance()->value("hls","encoding_profile").toString());
     m_hlsManager->setInputFilename(QString("/tmp/outputpipe%1.ts").arg(adapter_no));
 
     m_hlsManager->initialize();

@@ -1,6 +1,7 @@
 #include "configurationmanager.h"
 #include <QDebug>
 #include <QFile>
+#include <QDir>
 
 QSharedPointer<ConfigurationManager> ConfigurationManager::m_instance(new ConfigurationManager());
 
@@ -33,6 +34,29 @@ void ConfigurationManager::initialize()
     if(!status) {
         qFatal("Cannot sync settings, cannot initialize application.");
     }
+}
+
+QVariant ConfigurationManager::value(const QString &prefix, const QString &key, const QVariant &defaultValue) const
+{
+    m_settings->beginGroup(prefix);
+    QVariant value = m_settings->value(key, defaultValue);
+    m_settings->endGroup();
+
+    return value;
+}
+
+void ConfigurationManager::setValue(const QString &prefix, const QString &key, const QVariant &value)
+{
+    m_settings->beginGroup(prefix);
+    m_settings->setValue(key, value);
+    m_settings->endGroup();
+}
+
+void ConfigurationManager::remove(const QString &prefix, const QString &key)
+{
+    m_settings->beginGroup(prefix);
+    m_settings->remove(key);
+    m_settings->endGroup();
 }
 
 QVariant ConfigurationManager::value(const int adapterNo, const QString &key, const QVariant &defaultValue) const
@@ -101,4 +125,8 @@ bool ConfigurationManager::resetDefault()
 void ConfigurationManager::defaultValues()
 {
     setValue("initialized", true);
+    setValue("hls","tmp_outdir", QDir::tempPath() + "/hls");
+    setValue("hls","segment_length",15);
+    setValue("hls","filename_prefix","hls_vpub");
+    setValue("hls","encoding_profile","");
 }

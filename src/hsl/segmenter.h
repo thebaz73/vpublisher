@@ -30,6 +30,8 @@ public:
 
     int doRead(quint8 *buf, int buf_size);
     qint64 doSeek(qint64 offset, int whence);
+
+    int exitCode() const;
 signals:
     void finished();
 
@@ -41,6 +43,7 @@ public slots:
 private:
     bool m_running;
     bool m_suspend;
+    int m_exit_code;
     QWaitCondition m_suspend_condition;
     QMutex m_suspend_mutex;
     int m_adapter_no;
@@ -81,7 +84,7 @@ private:
 
     int decode();
     int writeSegments();
-    int finalize();
+    void finalize();
 
     void avPrintError(int err);
 };

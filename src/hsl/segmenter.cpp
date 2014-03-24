@@ -20,6 +20,7 @@ Segmenter::Segmenter(QObject *parent) :
     QObject(parent),
     m_running(true),
     m_suspend(false),
+    m_exit_code(0),
     m_input_format(NULL),
     m_pb(NULL),
     m_input_context(NULL),
@@ -133,45 +134,42 @@ qint64 Segmenter::doSeek(qint64 offset, int whence)
     return -1;
 }
 
+int Segmenter::exitCode() const
+{
+    return m_exit_code;
+}
+
 void Segmenter::process()
 {
 #ifdef USING_PIPE
     qDebug("Opening pipe: %s...\n", m_config.input_filename);
-    int ret = openPipe();
+    m_exit_code = openPipe();
 #endif
 
 #ifdef USING_DEVICE
     qDebug("Opening device: %s...\n", qPrintable(m_dtv_device->name()));
-    int ret = openDevice();
-    ret = ((ret==0) ? configureDevice() : ret);
+    m_exit_code = openDevice();
+    m_exit_code = ((m_exit_code==0) ? configureDevice() : m_exit_code);
 #endif
 
-    if(!ret) {
+    if(!m_exit_code) {
         qDebug("Inizializing input...\n");
-        ret = openInputContext();
+        m_exit_code = openInputContext();
         qDebug("Inizializing output...\n");
-        ret += openOutputContext();
+        m_exit_code += openOutputContext();
 
 
-        while (!ret && m_running) {
-            if(m_suspend) {
-                m_suspend_condition.wait(&m_suspend_mutex);
-            }
+        if(!m_exit_code && m_running) {
             qDebug("Decoding...\n");
-            ret = decode();
-            if(ret != 0) {
-                break;
-            }
-            qDebug("Writing segments...\n");
-            ret = writeSegments();
-            if(ret != 0) {
-                break;
+            m_exit_code = decode();
+            if(!m_exit_code) {
+                qDebug("Writing segments...\n");
+                m_exit_code += writeSegments();
+                qDebug("Finalizing...\n");
+                finalize();
             }
         }
-        qDebug("Finalizing...\n");
-        ret = finalize();
-    }
-
+    }    
 #ifdef USING_DEVICE
     closeDevice();
 #endif
@@ -196,6 +194,7 @@ void Segmenter::stop()
     m_running = false;
     emit finished();
 }
+
 
 AVStream *Segmenter::addOutputStream(AVFormatContext *output_format_context, AVStream *input_stream)
 {
@@ -455,9 +454,14 @@ int Segmenter::writeSegments()
     m_first_segment = 1;
     m_last_segment = 0;
 
+    int retValue = 0;
     double prev_segment_time = 0;
     int decode_done;
     do {
+        if(m_suspend) {
+            m_suspend_condition.wait(&m_suspend_mutex);
+        }
+
         double segment_time;
         AVPacket packet;
         av_init_packet(&packet);
@@ -469,6 +473,7 @@ int Segmenter::writeSegments()
         if (av_dup_packet(&packet) < 0) {
             qWarning("Segmenter error: Could not duplicate packet");
             av_free_packet(&packet);
+            retValue = 1;
             break;
         }
 
@@ -493,6 +498,7 @@ int Segmenter::writeSegments()
             qDebug("Segmenter: Writing output to %s", output_filename);
             if (avio_open(&m_output_context->pb, output_filename, AVIO_FLAG_WRITE) < 0) {
                 qWarning("Segmenter error: Could not open '%s'\n", output_filename);
+                retValue = 2;
                 break;
             }
 
@@ -501,7 +507,7 @@ int Segmenter::writeSegments()
 
         int ret = av_interleaved_write_frame(m_output_context, &packet);
         if (ret < 0) {
-            //qWarning("Segmenter error: Could not write frame of stream: (error_code=%d)\n", ret);
+            //qDebug("Segmenter error: Could not write frame of stream: (error_code=%d)\n", ret);
         }
         else if (ret > 0) {
             qDebug("Segmenter info: End of stream requested\n");
@@ -510,14 +516,14 @@ int Segmenter::writeSegments()
         }
 
         av_free_packet(&packet);
-    } while (!decode_done);
+    } while (!decode_done && m_running);
 
     av_write_trailer(m_output_context);
 
-    return 0;
+    return retValue;
 }
 
-int Segmenter::finalize()
+void Segmenter::finalize()
 {
     qDebug("Segmenter info: Executing cleaning procedures\n");
     if (m_video_index >= 0)  {
@@ -533,7 +539,6 @@ int Segmenter::finalize()
     av_free(m_output_context);
 
     outputTransferCommand(m_first_segment, ++m_last_segment, 1, m_config.encoding_profile);
-    return 0;
 }
 
 void Segmenter::avPrintError(int err)

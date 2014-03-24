@@ -13,6 +13,10 @@ public:
     static QSharedPointer<ConfigurationManager> instance();
     ~ConfigurationManager();
     void initialize();
+
+    QVariant value(const QString &prefix, const QString &key, const QVariant &defaultValue) const;
+    void setValue(const QString &prefix, const QString &key, const QVariant &value);
+    void remove(const QString &prefix, const QString & key);
     QVariant value(const int adapterNo, const QString & key, const QVariant & defaultValue = QVariant()) const;
     void setValue(const int adapterNo, const QString & key, const QVariant & value);
     void remove(const int adapterNo, const QString & key);
@@ -23,7 +27,6 @@ public:
     bool sync();
     bool clear();
     bool resetDefault();
-
 signals:
     
 public slots:
