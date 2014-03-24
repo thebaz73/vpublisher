@@ -22,6 +22,7 @@ signals:
 
 public slots:
     void elaborate();
+    void processSegmentationFinished();
 private:
     DeviceManager *m_deviceManager;
     SegmentationManager *m_segmentation_manager;

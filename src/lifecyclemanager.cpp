@@ -24,6 +24,7 @@ void LifecycleManager::initialize()
 #endif
     if(!m_segmentation_manager) {
         m_segmentation_manager = new HLSManager(this);
+        connect(m_segmentation_manager, SIGNAL(finished()), this, SLOT(processSegmentationFinished()));
     }
     m_outdir = ConfigurationManager::instance()->value("hls","tmp_outdir", "/tmp/hls").toString();
     QDir dir(m_outdir);
@@ -50,11 +51,11 @@ void LifecycleManager::elaborate()
     settings.setValue("frequency", 482000000);
     settings.setValue("bandwidth", 8000000);
 
-    if(m_deviceManager->configureDevice(adapter_no, &settings) == 0) {
-        qDebug() << "Settings applied";
+    DTVDevice *device = m_deviceManager->getDevice(adapter_no);
+    if(device->status() != DTVDevice::LOCKED && device->configure(&settings) == 0) {
+        qDebug("Settings applied on device: %s", qPrintable(device->name()));
     }
 
-    DTVDevice *device = m_deviceManager->getDevice(adapter_no);
     if(device->status() == DTVDevice::LOCKED) {
         m_segmentation_manager->setDtvDevice(device);
 
@@ -83,4 +84,17 @@ void LifecycleManager::elaborate()
 
     m_segmentation_manager->doSegmentation();
 #endif
+}
+
+void LifecycleManager::processSegmentationFinished()
+{
+    int exitCode = m_segmentation_manager->exitCode();
+    if(exitCode != 0) {
+        qCritical("Segmentation manager unexpectedly finished (error code=%d). Rescheduling...", exitCode);
+        m_timer.setSingleShot(true);
+        m_timer.start(2000);
+    }
+    else {
+        qDebug("Segmentation manager finished");
+    }
 }

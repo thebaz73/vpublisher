@@ -52,12 +52,6 @@ DTVDevice *DeviceManager::getDevice(int adapterNumber) const
     return device;
 }
 
-int DeviceManager::configureDevice(int adapterNumber, DeviceSettings *settings)
-{
-    Q_ASSERT(m_devices.contains(adapterNumber));
-    return m_devices[adapterNumber]->configure(settings);
-}
-
 void DeviceManager::analyzeSysFS()
 {
     QMutexLocker l(&m_device_mutex);
