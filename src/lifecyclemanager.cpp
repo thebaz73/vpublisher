@@ -71,7 +71,7 @@ void LifecycleManager::elaborate()
         m_hlsManager->addPid(VIDEO_PID, 1301);
         m_hlsManager->addPid(AUDIO_PID, 1302);
 
-        m_hlsManager->initialize();
+        m_hlsManager->doSegmentation();
     }
 #endif
 #ifdef USING_PIPE
@@ -82,6 +82,6 @@ void LifecycleManager::elaborate()
     m_hlsManager->setEncodingProfile(ConfigurationManager::instance()->value("hls","encoding_profile").toString());
     m_hlsManager->setInputFilename(QString("/tmp/outputpipe%1.ts").arg(adapter_no));
 
-    m_hlsManager->initialize();
+    m_hlsManager->doSegmentation();
 #endif
 }

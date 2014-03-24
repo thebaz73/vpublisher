@@ -173,6 +173,8 @@ void Segmenter::process()
 #ifdef USING_DEVICE
     closeDevice();
 #endif
+    emit reportExitCode(m_exit_code);
+    emit finished();
 }
 
 void Segmenter::suspend()
@@ -192,7 +194,6 @@ void Segmenter::stop()
         resume();
     }
     m_running = false;
-    emit finished();
 }
 
 

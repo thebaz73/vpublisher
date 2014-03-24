@@ -58,7 +58,8 @@ SOURCES += src/main.cpp \
     src/vpubdaemon.cpp \
     src/vpublishingservice.cpp \
     src/vpublishingservice_interface.cpp \
-    src/configurationmanager.cpp
+    src/configurationmanager.cpp \
+    src/segmentationmanager.cpp
 
 HEADERS += \
     src/hsl/hlsmanager.h \
@@ -80,7 +81,8 @@ HEADERS += \
     src/vpubdaemon.h \
     src/vpublishingservice_interface.h \
     src/vpublishingservice.h \
-    src/configurationmanager.h
+    src/configurationmanager.h \
+    src/segmentationmanager.h
 
 unix: CONFIG += link_pkgconfig
 unix: PKGCONFIG += libudev

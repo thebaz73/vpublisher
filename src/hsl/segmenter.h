@@ -34,6 +34,7 @@ public:
     int exitCode() const;
 signals:
     void finished();
+    void reportExitCode(int exitCode);
 
 public slots:
     void process();

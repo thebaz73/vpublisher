@@ -3,7 +3,7 @@
 #include <QDebug>
 
 HLSManager::HLSManager(QObject *parent) :
-    QObject(parent),
+    SegmentationManager(parent),
     m_segmenter(NULL),
     m_adapter_no(0),
     m_inputFilename(""),
@@ -17,51 +17,6 @@ HLSManager::HLSManager(QObject *parent) :
 
 HLSManager::~HLSManager()
 {
-}
-
-void HLSManager::initialize()
-{
-    qDebug() << "Initializing HSL manager...";
-    config_info config;
-    memset(&config, 0, sizeof(config_info));
-
-    config.segment_length = m_segmentLength;
-    config.temp_directory = (char *)malloc(sizeof(qPrintable(m_tempDirectory)));
-    strcpy((char *)config.temp_directory, qPrintable(m_tempDirectory));
-    config.filename_prefix = (char *)malloc(sizeof(qPrintable(m_filenamePrefix)));
-    strcpy((char *)config.filename_prefix, qPrintable(m_filenamePrefix));
-    config.encoding_profile = (char *)malloc(sizeof(qPrintable(m_encodingProfile)));
-    strcpy((char *)config.encoding_profile, qPrintable(m_encodingProfile));
-#ifdef USING_PIPE
-    config.input_filename = (char *)malloc(sizeof(qPrintable(m_inputFilename)));
-    strcpy((char *)config.input_filename, qPrintable(m_inputFilename));
-#endif
-#ifdef USING_DEVICE
-    config.pmt_pid = pids.value(PMT_PID);
-    config.video_pid = pids.value(VIDEO_PID);
-    config.audio_pid = pids.value(AUDIO_PID);
-#endif
-    m_segmenter = new Segmenter();
-    m_segmenter->configure(m_adapter_no, config);
-    m_segmenter->setDtvDevice(m_dtv_device);
-
-    QThread* thread = new QThread();
-    m_segmenter->moveToThread(thread);
-    connect(thread, SIGNAL(started()), m_segmenter, SLOT(process()));
-    connect(m_segmenter, SIGNAL(finished()), thread, SLOT(quit()));
-    connect(m_segmenter, SIGNAL(finished()), m_segmenter, SLOT(deleteLater()));
-    connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
-    thread->start();
-}
-
-Segmenter *HLSManager::segmenter() const
-{
-    return m_segmenter;
-}
-
-void HLSManager::setSegmenter(Segmenter *segmenter)
-{
-    m_segmenter = segmenter;
 }
 
 int HLSManager::adapterNumber() const
@@ -138,6 +93,50 @@ void HLSManager::addPid(PidType type, int pid)
 {
     pids.insert(type, pid);
 }
+
+void HLSManager::doSegmentation()
+{
+    qDebug() << "Initializing HSL manager...";
+    config_info config;
+    memset(&config, 0, sizeof(config_info));
+
+    config.segment_length = m_segmentLength;
+    config.temp_directory = (char *)malloc(sizeof(qPrintable(m_tempDirectory)));
+    strcpy((char *)config.temp_directory, qPrintable(m_tempDirectory));
+    config.filename_prefix = (char *)malloc(sizeof(qPrintable(m_filenamePrefix)));
+    strcpy((char *)config.filename_prefix, qPrintable(m_filenamePrefix));
+    config.encoding_profile = (char *)malloc(sizeof(qPrintable(m_encodingProfile)));
+    strcpy((char *)config.encoding_profile, qPrintable(m_encodingProfile));
+#ifdef USING_PIPE
+    config.input_filename = (char *)malloc(sizeof(qPrintable(m_inputFilename)));
+    strcpy((char *)config.input_filename, qPrintable(m_inputFilename));
+#endif
+#ifdef USING_DEVICE
+    config.pmt_pid = pids.value(PMT_PID);
+    config.video_pid = pids.value(VIDEO_PID);
+    config.audio_pid = pids.value(AUDIO_PID);
+#endif
+    m_segmenter = new Segmenter();
+    m_segmenter->configure(m_adapter_no, config);
+    m_segmenter->setDtvDevice(m_dtv_device);
+
+    QThread* thread = new QThread();
+    m_segmenter->moveToThread(thread);
+    connect(thread, SIGNAL(started()), m_segmenter, SLOT(process()));
+    connect(m_segmenter, SIGNAL(reportStatus(int)), this, SLOT(quit()));
+    connect(m_segmenter, SIGNAL(finished()), thread, SLOT(quit()));
+    connect(m_segmenter, SIGNAL(finished()), m_segmenter, SLOT(deleteLater()));
+    connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
+    thread->start();
+}
+
+void HLSManager::onSegmenterExitCode(int exitCode)
+{
+    m_exit_code = exitCode;
+    emit finished();
+}
+
+
 
 
 
