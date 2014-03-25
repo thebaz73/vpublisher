@@ -3,7 +3,6 @@
 
 #include <QThread>
 
-#include "dev/devicemanager.h"
 #include "dev/dtvdevice.h"
 #include "segmentationmanager.h"
 #include "playlistmanager.h"
@@ -23,8 +22,9 @@ public:
     DTVDevice *device() const;
     void setDevice(DTVDevice *device);
 
+    void stop();
 signals:
-    void exitStatus(WorkerExitStatus status);
+    void exitStatus(int status);
 
 public slots:
     void run();

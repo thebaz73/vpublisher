@@ -45,11 +45,11 @@
 enum PidType {PMT_PID = 0, VIDEO_PID, AUDIO_PID};
 
 enum WorkerExitStatus {
-    WORKER_ERROR = 0,
+    NO_ERROR = 0,
     SEGMENTER_ERROR,
     GENERATOR_ERROR,
     DEPLOYER_ERROR,
-    NO_ERROR
+    WORKER_ERROR
 };
 
 typedef struct config_info_s

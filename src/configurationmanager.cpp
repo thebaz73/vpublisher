@@ -154,7 +154,7 @@ void ConfigurationManager::defaultValues()
     setValue("hls","segment_length",15);
     setValue("hls","filename_prefix","hls_vpub");
     setValue("hls","encoding_profile","128K");
-    setValue("hls","input_filename", "/tmp/outputpipe%1.ts");
+    setValue("hls","input_filename", "../vpubd/etc/test%1.ts");
     setValue("hls", "playlist_name", "hls_vpub.m3u8");
     setValue("hls", "segment_url", "http://localhost:8080/vpub");
 

@@ -13,7 +13,10 @@ public:
     explicit HLSManager(QObject *parent = 0);
     ~HLSManager();
 
-    virtual void doSegmentation();
+    virtual void startSegmentation();
+    virtual void stopSegmentation();
+public slots:
+    void onUpdateConfiguration();
 protected:
 
 private:

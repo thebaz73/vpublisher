@@ -24,7 +24,6 @@ void LifecycleManager::initialize()
 #ifdef USING_DEVICE
     Q_ASSERT(m_deviceManager);
 #endif
-
     connect(&m_timer, SIGNAL(timeout()), this, SLOT(elaborate()));
     m_timer.setSingleShot(true);
     m_timer.start(2000);
@@ -40,14 +39,18 @@ void LifecycleManager::onUpdateConfiguration()
     //do nothing
 }
 
-void LifecycleManager::onExitStatus(WorkerExitStatus status)
+void LifecycleManager::onExitStatus(int status)
 {
     qDebug("Streaming worker exit status: %d", status);
 }
 
 void LifecycleManager::elaborate()
 {
-    int adapter_no = 0;
+    start(0, 0);
+}
+
+void LifecycleManager::start(int adapter_no, int service_id)
+{
 #ifdef USING_DEVICE
     DeviceSettings settings;
     settings.setValue("delivery_system", 3);
@@ -62,14 +65,23 @@ void LifecycleManager::elaborate()
         qDebug("Settings applied on device: %s, but signal not locked.", qPrintable(device->name()));
     }
 #endif
-    m_worker = new StreamingWorker(this);
-    connect(m_worker, SIGNAL(exitStatus(WorkerExitStatus)), this, SLOT(onExitStatus(WorkerExitStatus)));
+    StreamingWorker *worker = new StreamingWorker(this);
+    connect(worker, SIGNAL(exitStatus(int)), this, SLOT(onExitStatus(int)));
 
-    m_worker->setAdapterNumber(adapter_no);
+    worker->setAdapterNumber(adapter_no);
 #ifdef USING_DEVICE
-    m_worker->setDevice(device);
+    worker->setDevice(device);
 #endif
-    m_worker->initialize();
-    m_worker->start();
+    worker->initialize();
+    worker->start();
+    m_worker_map.insert(adapter_no, worker);
+}
+
+void LifecycleManager::stop(int adapter_no)
+{
+    if(m_worker_map.contains(adapter_no)) {
+        StreamingWorker *worker = m_worker_map.value(adapter_no);
+        worker->stop();
+    }
 }
 

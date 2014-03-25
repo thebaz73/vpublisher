@@ -14,7 +14,6 @@ SegmentationManager::SegmentationManager(Type type, QObject *parent) :
     m_encodingProfile(""),
     m_dtv_device(NULL)
 {
-    onUpdateConfiguration();
 }
 
 SegmentationManager::Type SegmentationManager::type() const
@@ -100,20 +99,6 @@ int SegmentationManager::exitCode() const
 void SegmentationManager::addPid(PidType type, int pid)
 {
     pids.insert(type, pid);
-}
-
-void SegmentationManager::onUpdateConfiguration()
-{
-    m_outdir = ConfigurationManager::instance()->value("hls","tmp_outdir", "/tmp/hls").toString();
-    QDir dir(m_outdir);
-    if(!dir.exists()) {
-        dir.mkpath(m_outdir);
-    }
-    setTempDirectory(m_outdir);
-    setSegmentLength(ConfigurationManager::instance()->value("hls","segment_length", 15).toInt());
-    setFilenamePrefix(ConfigurationManager::instance()->value("hls","filename_prefix", "hls_vpub").toString());
-    setEncodingProfile(ConfigurationManager::instance()->value("hls","encoding_profile", "128K").toString());
-    setInputFilename(ConfigurationManager::instance()->value("hls","input_filename", "/tmp/outputpipe%1.ts").toString().arg(m_adapter_no));
 }
 
 void SegmentationManager::onSegmenterExitCode(int exitCode)

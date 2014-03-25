@@ -34,7 +34,7 @@ DEFINES +=USING_DEVICE="1"
 
 ########################################################################
 ## Da decommentare se si vuole compilare nel sistema embedded
-##DEFINES +=USING_PIPE="1"
+#DEFINES +=USING_PIPE="1"
 ########################################################################
 
 SOURCES += src/main.cpp \
@@ -68,7 +68,8 @@ SOURCES += src/main.cpp \
     src/playlistmanager.cpp \
     src/deploy/deployer.cpp \
     src/deploy/deployerfactory.cpp \
-    src/deploy/localdeployer.cpp
+    src/deploy/localdeployer.cpp \
+    src/analysismanager.cpp
 
 HEADERS += \
     src/hls/hlsmanager.h \
@@ -100,7 +101,8 @@ HEADERS += \
     src/playlistmanager.h \
     src/deploy/deployer.h \
     src/deploy/deployerfactory.h \
-    src/deploy/localdeployer.h
+    src/deploy/localdeployer.h \
+    src/analysismanager.h
 
 
 
@@ -108,8 +110,8 @@ unix: CONFIG += link_pkgconfig
 unix: PKGCONFIG += libudev
 unix: PKGCONFIG += x264
 
-#WORKSTATION = HOME
-WORKSTATION = OFFICE
+WORKSTATION = HOME
+#WORKSTATION = OFFICE
 equals(WORKSTATION, "HOME") {
     message("Using home environment");
     unix: PKGCONFIG += libavformat

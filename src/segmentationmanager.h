@@ -47,12 +47,13 @@ public:
 
     void addPid(PidType type, int pid);
 
-    virtual void doSegmentation() = 0;
+    virtual void startSegmentation() = 0;
+    virtual void stopSegmentation() = 0;
 signals:
     void finished();
     void segmentChanged(QString fileName, double segmentLength);
 public slots:
-    virtual void onUpdateConfiguration();
+    virtual void onUpdateConfiguration() = 0;
     void onSegmenterExitCode(int exitCode);
     void onSegmentIndexChanged(int segmentIndex, double segmentLength);
 protected:

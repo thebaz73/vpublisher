@@ -33,19 +33,16 @@ void StreamingWorker::initialize()
 #ifdef USING_DEVICE
     if(m_device->status() == DTVDevice::LOCKED) {
         m_segmentation_manager->setDtvDevice(m_device);
-
-        m_segmentation_manager->setAdapterNumber(m_adapterNumber);
-        m_segmentation_manager->addPid(PMT_PID, 1300);
-        m_segmentation_manager->addPid(VIDEO_PID, 1301);
-        m_segmentation_manager->addPid(AUDIO_PID, 1302);
     }
 #endif
-#ifdef USING_PIPE
-    m_segmentation_manager->setAdapterNumber(adapter_no);
+
+    m_segmentation_manager->setAdapterNumber(m_adapterNumber);
+//    m_segmentation_manager->addPid(PMT_PID, 66);
+//    m_segmentation_manager->addPid(VIDEO_PID, 69);
+//    m_segmentation_manager->addPid(AUDIO_PID, 68);
     m_segmentation_manager->addPid(PMT_PID, 1300);
     m_segmentation_manager->addPid(VIDEO_PID, 1301);
     m_segmentation_manager->addPid(AUDIO_PID, 1302);
-#endif
 }
 
 int StreamingWorker::adapterNumber() const
@@ -68,9 +65,25 @@ void StreamingWorker::setDevice(DTVDevice *device)
     m_device = device;
 }
 
+void StreamingWorker::stop()
+{
+    m_segmentation_manager->stopSegmentation();
+}
+
 void StreamingWorker::run()
 {
-    m_segmentation_manager->doSegmentation();
+#ifdef USING_DEVICE
+    if(m_device->status() == DTVDevice::LOCKED) {
+        m_segmentation_manager->startSegmentation();
+    }
+    else {
+        qDebug("Segmentation manager not started, device not locked");
+        emit exitStatus(NO_ERROR);
+    }
+#endif
+#ifdef USING_PIPE
+    m_segmentation_manager->startSegmentation();
+#endif
 }
 
 void StreamingWorker::processSegmentationFinished()

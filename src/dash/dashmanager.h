@@ -10,7 +10,8 @@ public:
     explicit DashManager(QObject *parent = 0);
     ~DashManager();
 
-    virtual void doSegmentation();
+    virtual void startSegmentation();
+    virtual void stopSegmentation();
 protected:
     virtual unsigned int currentSegmentIndex() const;
 signals:

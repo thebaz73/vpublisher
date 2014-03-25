@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QTimer>
+#include <QMap>
 #include <QMutex>
 
 #include "configurablemanager.h"
@@ -23,12 +24,14 @@ signals:
 
 public slots:
     void onUpdateConfiguration();
-    void onExitStatus(WorkerExitStatus status);
+    void onExitStatus(int status);
     void elaborate();
+    void start(int adapter_no, int service_id);
+    void stop(int adapter_no);
 private:
-    DeviceManager *m_deviceManager;
-    StreamingWorker *m_worker;
+    DeviceManager *m_deviceManager;    
     QTimer m_timer;
+    QMap<int, StreamingWorker*> m_worker_map;
 };
 
 #endif // LIFECYCLEMANAGER_H

@@ -13,7 +13,12 @@ DashManager::~DashManager()
 {
 }
 
-void DashManager::doSegmentation()
+void DashManager::startSegmentation()
+{
+
+}
+
+void DashManager::stopSegmentation()
 {
 
 }
