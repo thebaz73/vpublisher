@@ -10,12 +10,11 @@ public:
     explicit DashManager(QObject *parent = 0);
     ~DashManager();
 
-    virtual unsigned int currentSegmentIndex() const;
     virtual void doSegmentation();
+protected:
+    virtual unsigned int currentSegmentIndex() const;
 signals:
-
 public slots:
-
 };
 
 #endif // DASHMANAGER_H

@@ -17,6 +17,15 @@
 DTVDevice::DTVDevice(QObject *parent) :
     QObject(parent),
     m_status(CONNECTED),
+    m_vendorId(""),
+    m_productId(""),
+    m_manufacturer(""),
+    m_product(""),
+    m_serial(""),
+    m_version(""),
+    m_busNumber(""),
+    m_devPath(""),
+    m_adapterNumber(0),
     m_synchronized(false)
 {
 }

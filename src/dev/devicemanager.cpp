@@ -4,11 +4,12 @@
 #include <QDebug>
 #include <linux/dvb/version.h>
 
+#include "../configurationmanager.h"
 
 #define INCIPIT "/dev/dvb/adapter"
 
 DeviceManager::DeviceManager(QObject *parent) :
-    QObject(parent)
+    ConfigurableManager(parent)
 {
     if(DVB_API_VERSION == 5 && DVB_API_VERSION_MINOR == 4) {
         qDebug("Using DVB API v%d.%d", DVB_API_VERSION, DVB_API_VERSION_MINOR);
@@ -16,6 +17,7 @@ DeviceManager::DeviceManager(QObject *parent) :
     else {
         qFatal("Wrong DVB API. Current version: v%d.%d", DVB_API_VERSION, DVB_API_VERSION_MINOR);
     }
+    onUpdateConfiguration();
 }
 
 DeviceManager::~DeviceManager()
@@ -52,6 +54,13 @@ DTVDevice *DeviceManager::getDevice(int adapterNumber) const
     return device;
 }
 
+void DeviceManager::onUpdateConfiguration()
+{
+    m_subsystem = ConfigurationManager::instance()->value("subsystem", "dvb").toString();
+    m_system_bus = ConfigurationManager::instance()->value("system_bus", "usb").toString();
+    m_device_type = ConfigurationManager::instance()->value("device_type", "usb_device").toString();
+}
+
 void DeviceManager::analyzeSysFS()
 {
     QMutexLocker l(&m_device_mutex);
@@ -64,7 +73,7 @@ void DeviceManager::analyzeSysFS()
     else {
         m_devices.clear();
         struct udev_enumerate *enumerate = udev_enumerate_new(udev);
-        int ret = udev_enumerate_add_match_subsystem(enumerate, "dvb");
+        int ret = udev_enumerate_add_match_subsystem(enumerate, qPrintable(m_subsystem));
         ret += udev_enumerate_scan_devices(enumerate);
         if(!ret) {
             struct udev_list_entry *devices = udev_enumerate_get_list_entry(enumerate);
@@ -78,7 +87,7 @@ void DeviceManager::analyzeSysFS()
                 if(ch_ptr) {
                     QString node_path = QString::fromLatin1(ch_ptr);
 
-                    dev = udev_device_get_parent_with_subsystem_devtype(dev, "usb", "usb_device");
+                    dev = udev_device_get_parent_with_subsystem_devtype(dev, qPrintable(m_system_bus), qPrintable(m_device_type));
                     if (dev) {
                         m_status = DEVICE_FOUND;
                         QString vendor_id = QString::fromLatin1(udev_device_get_sysattr_value(dev,"idVendor"));

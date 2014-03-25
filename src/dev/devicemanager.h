@@ -6,10 +6,11 @@
 #include <QTimer>
 #include <QMutex>
 
+#include "../configurablemanager.h"
 #include "dtvdevice.h"
 #include "devicesettings.h"
 
-class DeviceManager : public QObject
+class DeviceManager : public ConfigurableManager
 {
     Q_OBJECT
 public:
@@ -25,9 +26,13 @@ public:
 signals:
 
 private slots:
+    void onUpdateConfiguration();
     void analyzeSysFS();
 //    void analyzeCamera();
 private:
+    QString m_subsystem;
+    QString m_system_bus;
+    QString m_device_type;
     Status m_status;
     QTimer m_dvb_device_timer;
     QMap<int, DTVDevice *> m_devices;

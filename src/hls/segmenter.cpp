@@ -51,6 +51,7 @@ Segmenter::Segmenter(QObject *parent) :
 
 Segmenter::~Segmenter()
 {
+    finalize();
 }
 
 void Segmenter::configure(int adapterNo, config_info config)
@@ -68,11 +69,6 @@ DTVDevice *Segmenter::dtvDevice() const
 void Segmenter::setDtvDevice(DTVDevice *dtv_device)
 {
     m_dtv_device = dtv_device;
-}
-
-unsigned int Segmenter::currentSegmentIndex() const
-{
-    return m_current_segment_index;
 }
 
 int Segmenter::doRead(quint8 *buf, int buf_size)
@@ -257,16 +253,6 @@ AVStream *Segmenter::addOutputStream(AVFormatContext *output_format_context, AVS
     return output_stream;
 }
 
-void Segmenter::outputTransferCommand(const unsigned int first_segment, const unsigned int last_segment, const int end, const char *encoding_profile)
-{
-    char buffer[1024 * 10];
-    memset(buffer, 0, sizeof(char) * 1024 * 10);
-
-    sprintf(buffer, "%d, %d, %d, %s", first_segment, last_segment, end, encoding_profile);
-
-    //qDebug("Segmenter: %s", buffer);
-}
-
 int Segmenter::openPipe()
 {
     m_input_fd = open(m_config.input_filename, O_RDONLY);
@@ -424,23 +410,26 @@ int Segmenter::decode()
 
 int Segmenter::writeSegments()
 {
-    char *output_filename = (char *)malloc(sizeof(char) * (strlen(m_config.temp_directory) + 1 + strlen(m_config.filename_prefix) + 10));
-    if (!output_filename) {
+
+    char *output_filename = (char *)malloc(sizeof(char) * (strlen(m_config.filename_prefix) + 10));
+    char *output_path = (char *)malloc(sizeof(char) * (strlen(m_config.temp_directory) + 1 + strlen(m_config.filename_prefix) + 10));
+    if (!output_filename || !output_path) {
         qWarning("Segmenter error: Could not allocate space for output filenames");
         return 1;
     }
 
     m_current_segment_index = 1;
-    snprintf(output_filename, strlen(m_config.temp_directory) + 1 + strlen(m_config.filename_prefix) + 10, "%s/%s-%05u.ts", m_config.temp_directory, m_config.filename_prefix, m_current_segment_index++);
+    snprintf(output_filename, strlen(m_config.filename_prefix) + 10, SEGMENT_NAME_PATTERN, m_config.filename_prefix, m_current_segment_index++);
+    snprintf(output_path, strlen(m_config.temp_directory) + 1 + strlen(m_config.filename_prefix) + 10, "%s/%s", m_config.temp_directory, output_filename);
 
-    int ret = avio_open(&m_output_context->pb, output_filename, AVIO_FLAG_WRITE);
-    if (ret < 0) {
+    qDebug("Segmenter: Writing output to %s", output_path);
+    if (avio_open(&m_output_context->pb, output_path, AVIO_FLAG_WRITE) < 0) {
         qWarning("Segmenter error: Could not open '%s'", output_filename);
         return 1;
     }
+    //emit segmentIndexChanged(m_current_segment_index++);
 
-    ret = avformat_write_header(m_output_context, NULL);
-    if (ret != 0) {
+    if (avformat_write_header(m_output_context, NULL) != 0) {
         qWarning("Segmenter error: Could not write mpegts header to first output file");
         return 1;
     }
@@ -485,13 +474,14 @@ int Segmenter::writeSegments()
         if (segment_time - prev_segment_time >= m_config.segment_length) {
             avio_flush(m_output_context->pb);
             avio_close(m_output_context->pb);
+            emit segmentIndexChanged(m_current_segment_index, segment_time - prev_segment_time); //signal closed file
 
-            outputTransferCommand(m_first_segment, ++m_last_segment, 0, m_config.encoding_profile);
+            snprintf(output_filename, strlen(m_config.filename_prefix) + 10, SEGMENT_NAME_PATTERN, m_config.filename_prefix, m_current_segment_index++);
+            snprintf(output_path, strlen(m_config.temp_directory) + 1 + strlen(m_config.filename_prefix) + 10, "%s/%s", m_config.temp_directory, output_filename);
 
-            snprintf(output_filename, strlen(m_config.temp_directory) + 1 + strlen(m_config.filename_prefix) + 10, "%s/%s-%05u.ts", m_config.temp_directory, m_config.filename_prefix, m_current_segment_index++);
-            qDebug("Segmenter: Writing output to %s", output_filename);
-            if (avio_open(&m_output_context->pb, output_filename, AVIO_FLAG_WRITE) < 0) {
-                qWarning("Segmenter error: Could not open '%s'", output_filename);
+            qDebug("Segmenter: Writing output to %s", output_path);
+            if (avio_open(&m_output_context->pb, output_path, AVIO_FLAG_WRITE) < 0) {
+                qWarning("Segmenter error: Could not open '%s'", output_path);
                 retValue = 2;
                 break;
             }
@@ -531,8 +521,6 @@ void Segmenter::finalize()
 
     avio_close(m_output_context->pb);
     av_free(m_output_context);
-
-    outputTransferCommand(m_first_segment, ++m_last_segment, 1, m_config.encoding_profile);
 }
 
 void Segmenter::avPrintError(int err)

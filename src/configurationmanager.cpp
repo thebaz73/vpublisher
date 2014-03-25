@@ -106,7 +106,12 @@ bool ConfigurationManager::sync()
 {
     m_settings->sync();
 
-    return m_settings->status() == QSettings::NoError;
+    bool retValue = m_settings->status() == QSettings::NoError;
+    if(retValue) {
+        emit updateConfiguration();
+    }
+
+    return retValue;
 }
 
 bool ConfigurationManager::clear()
@@ -126,13 +131,33 @@ void ConfigurationManager::defaultValues()
 {
     //General
     setValue("initialized", true);
-    setValue("hls_active", true);
-    setValue("dash_active", false);
+
+    setValue("local_deploy", true);
+    setValue("scp_deploy", false);
+    setValue("webdav_deploy", false);
+    setValue("rpc_deploy", false);
+
+    setValue("hls_streaming", true);
+    setValue("dash_streaming", false);
+    setValue("max_filesize", 5);
+
+    //Device
+    setValue("device", "subsystem", "dvb");
+    setValue("device", "system_bus", "usb");
+    setValue("device", "device_type", "usb_device");
+
+    //LOCAL DEPLOY
+    setValue("local", "destination_folder", "/tmp/www/hls");
+
     //HSL
     setValue("hls","tmp_outdir", QDir::tempPath() + "/hls");
     setValue("hls","segment_length",15);
     setValue("hls","filename_prefix","hls_vpub");
     setValue("hls","encoding_profile","128K");
+    setValue("hls","input_filename", "/tmp/outputpipe%1.ts");
+    setValue("hls", "playlist_name", "hls_vpub.m3u8");
+    setValue("hls", "segment_url", "http://localhost:8080/vpub");
+
     //DASH
     setValue("dash","tmp_outdir", QDir::tempPath() + "/dash");
     setValue("dash","segment_length",15);

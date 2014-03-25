@@ -28,8 +28,6 @@ public:
     DTVDevice *dtvDevice() const;
     void setDtvDevice(DTVDevice *dtvDevice);
 
-    unsigned int currentSegmentIndex() const;
-
     int doRead(quint8 *buf, int buf_size);
     qint64 doSeek(qint64 offset, int whence);
 
@@ -38,6 +36,7 @@ public:
 signals:
     void finished();
     void reportExitCode(int exitCode);
+    void segmentIndexChanged(int segmentIndex, double segmentLength);
 
 public slots:
     void process();
@@ -78,7 +77,6 @@ private:
     DTVDevice *m_dtv_device;
 
     AVStream *addOutputStream(AVFormatContext *output_format_context, AVStream *input_stream);
-    void outputTransferCommand(const unsigned int m_first_segment, const unsigned int m_last_segment, const int end, const char *encoding_profile);
 
     int openPipe();
     int openDevice();

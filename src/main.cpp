@@ -12,7 +12,7 @@
 #include "vpubdaemon.h"
 #include "configurationmanager.h"
 #include "dev/devicemanager.h"
-#include "hsl/hlsmanager.h"
+#include "hls/hlsmanager.h"
 #include "lifecyclemanager.h"
 
 #include "vpublishingservice.h"

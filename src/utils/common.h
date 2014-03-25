@@ -40,8 +40,17 @@
 #define SEGMENTER_PKT_BUF_SIZE		188*174
 #define MAX_ANALYZE_DURATION        2147483647      //1000000
 #define MAX_INDEX_SIZE              2147483647      //4*1024*1024
+#define SEGMENT_NAME_PATTERN        "%s-%05u.ts"
 
 enum PidType {PMT_PID = 0, VIDEO_PID, AUDIO_PID};
+
+enum WorkerExitStatus {
+    WORKER_ERROR = 0,
+    SEGMENTER_ERROR,
+    GENERATOR_ERROR,
+    DEPLOYER_ERROR,
+    NO_ERROR
+};
 
 typedef struct config_info_s
 {

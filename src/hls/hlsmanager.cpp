@@ -4,76 +4,12 @@
 
 HLSManager::HLSManager(QObject *parent) :
     SegmentationManager(APPLE_HLS, parent),
-    m_segmenter(NULL),
-    m_inputFilename(""),
-    m_segmentLength(0),
-    m_tempDirectory(""),
-    m_filenamePrefix(""),
-    m_encodingProfile("")
+    m_segmenter(NULL)
 {
 }
 
 HLSManager::~HLSManager()
 {
-}
-
-QString HLSManager::inputFilename() const
-{
-    return m_inputFilename;
-}
-
-void HLSManager::setInputFilename(const QString &inputFilename)
-{
-    m_inputFilename = inputFilename;
-}
-
-int HLSManager::segmentLength() const
-{
-    return m_segmentLength;
-}
-
-void HLSManager::setSegmentLength(int segmentLength)
-{
-    m_segmentLength = segmentLength;
-}
-
-QString HLSManager::tempDirectory() const
-{
-    return m_tempDirectory;
-}
-
-void HLSManager::setTempDirectory(const QString &tempDirectory)
-{
-    m_tempDirectory = tempDirectory;
-}
-
-QString HLSManager::filenamePrefix() const
-{
-    return m_filenamePrefix;
-}
-
-void HLSManager::setFilenamePrefix(const QString &filenamePrefix)
-{
-    m_filenamePrefix = filenamePrefix;
-}
-
-QString HLSManager::encodingProfile() const
-{
-    return m_encodingProfile;
-}
-
-void HLSManager::setEncodingProfile(const QString &encodingProfile)
-{
-    m_encodingProfile = encodingProfile;
-}
-
-unsigned int HLSManager::currentSegmentIndex() const
-{
-    if(!m_segmenter) {
-        return 0;
-    }
-
-    return m_segmenter->currentSegmentIndex();
 }
 
 void HLSManager::doSegmentation()
@@ -101,6 +37,7 @@ void HLSManager::doSegmentation()
     m_segmenter = new Segmenter();
     m_segmenter->configure(m_adapter_no, config);
     m_segmenter->setDtvDevice(m_dtv_device);
+    connect(m_segmenter, SIGNAL(segmentIndexChanged(int,double)), this, SLOT(onSegmentIndexChanged(int,double)));
 
     QThread* thread = new QThread();
     m_segmenter->moveToThread(thread);
@@ -111,7 +48,3 @@ void HLSManager::doSegmentation()
     connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
     thread->start();
 }
-
-
-
-

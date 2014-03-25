@@ -5,10 +5,11 @@
 #include <QTimer>
 #include <QMutex>
 
+#include "configurablemanager.h"
 #include "dev/devicemanager.h"
-#include "segmentationmanager.h"
+#include "streamingworker.h"
 
-class LifecycleManager : public QObject
+class LifecycleManager : public ConfigurableManager
 {
     Q_OBJECT
 public:
@@ -21,13 +22,13 @@ public:
 signals:
 
 public slots:
+    void onUpdateConfiguration();
+    void onExitStatus(WorkerExitStatus status);
     void elaborate();
-    void processSegmentationFinished();
 private:
     DeviceManager *m_deviceManager;
-    SegmentationManager *m_segmentation_manager;
+    StreamingWorker *m_worker;
     QTimer m_timer;
-    QString m_outdir;
 };
 
 #endif // LIFECYCLEMANAGER_H

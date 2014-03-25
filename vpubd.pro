@@ -38,8 +38,8 @@ DEFINES +=USING_DEVICE="1"
 ########################################################################
 
 SOURCES += src/main.cpp \
-    src/hsl/hlsmanager.cpp \
-    src/hsl/segmenter.cpp \
+    src/hls/hlsmanager.cpp \
+    src/hls/segmenter.cpp \
     src/dev/devicemanager.cpp \
     src/dev/devicesettings.cpp \
     src/lifecyclemanager.cpp \
@@ -60,11 +60,19 @@ SOURCES += src/main.cpp \
     src/vpublishingservice_interface.cpp \
     src/configurationmanager.cpp \
     src/segmentationmanager.cpp \
-    src/dash/dashmanager.cpp
+    src/dash/dashmanager.cpp \
+    src/configurablemanager.cpp \
+    src/hls/m3u8generator.cpp \
+    src/streamingworker.cpp \
+    src/deploymentmanager.cpp \
+    src/playlistmanager.cpp \
+    src/deploy/deployer.cpp \
+    src/deploy/deployerfactory.cpp \
+    src/deploy/localdeployer.cpp
 
 HEADERS += \
-    src/hsl/hlsmanager.h \
-    src/hsl/segmenter.h \
+    src/hls/hlsmanager.h \
+    src/hls/segmenter.h \
     src/dev/devicemanager.h \
     src/dev/devicesettings.h \
     src/lifecyclemanager.h \
@@ -84,24 +92,43 @@ HEADERS += \
     src/vpublishingservice.h \
     src/configurationmanager.h \
     src/segmentationmanager.h \
-    src/dash/dashmanager.h
+    src/dash/dashmanager.h \
+    src/configurablemanager.h \
+    src/hls/m3u8generator.h \
+    src/streamingworker.h \
+    src/deploymentmanager.h \
+    src/playlistmanager.h \
+    src/deploy/deployer.h \
+    src/deploy/deployerfactory.h \
+    src/deploy/localdeployer.h
+
+
 
 unix: CONFIG += link_pkgconfig
 unix: PKGCONFIG += libudev
 unix: PKGCONFIG += x264
-unix: PKGCONFIG += libavformat
-unix: PKGCONFIG += libavcodec
-unix: PKGCONFIG += libavutil
+
+#WORKSTATION = HOME
+WORKSTATION = OFFICE
+equals(WORKSTATION, "HOME") {
+    message("Using home environment");
+    unix: PKGCONFIG += libavformat
+    unix: PKGCONFIG += libavcodec
+    unix: PKGCONFIG += libavutil
+}
+equals(WORKSTATION, "OFFICE") {
+    message("Using office environment");
+    unix:!macx: LIBS += -lbz2
+    unix:!macx: LIBS += -lmp3lame
+    unix:!macx: LIBS += -lfaad
+    unix:!macx: LIBS += -lpthread
+    unix:!macx: LIBS += -lavformat
+    unix:!macx: LIBS += -lavcodec
+    unix:!macx: LIBS += -lavutil
+}
 
 unix:!macx: LIBS += -lm
 unix:!macx: LIBS += -lz
-#unix:!macx: LIBS += -lbz2
-#unix:!macx: LIBS += -lmp3lame
-#unix:!macx: LIBS += -lfaad
-#unix:!macx: LIBS += -lpthread
-#unix:!macx: LIBS += -lavformat
-#unix:!macx: LIBS += -lavcodec
-#unix:!macx: LIBS += -lavutil
 
 OTHER_FILES += \
     resources/dbus.sh \

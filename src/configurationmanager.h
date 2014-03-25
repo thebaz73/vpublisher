@@ -28,7 +28,8 @@ public:
     bool clear();
     bool resetDefault();
 signals:
-    
+    void updateConfiguration();
+
 public slots:
 private:
     ConfigurationManager(QObject *parent = 0);
