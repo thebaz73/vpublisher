@@ -108,8 +108,8 @@ unix: CONFIG += link_pkgconfig
 unix: PKGCONFIG += libudev
 unix: PKGCONFIG += x264
 
-#WORKSTATION = HOME
-WORKSTATION = OFFICE
+WORKSTATION = HOME
+#WORKSTATION = OFFICE
 equals(WORKSTATION, "HOME") {
     message("Using home environment");
     unix: PKGCONFIG += libavformat

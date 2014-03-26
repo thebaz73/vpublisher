@@ -54,8 +54,10 @@ void LifecycleManager::start(int adapter_no, int service_id)
 #ifdef USING_DEVICE
     DeviceSettings settings;
     settings.setValue("delivery_system", 3);
-    settings.setValue("frequency", 482000000);
+    settings.setValue("frequency", 626000000);
     settings.setValue("bandwidth", 8000000);
+    settings.setValue("timeout", 2000);
+    settings.setValue("retries", 5);
 
     DTVDevice *device = m_deviceManager->getDevice(adapter_no);
     if(device->status() != DTVDevice::LOCKED && device->configure(&settings) == 0) {

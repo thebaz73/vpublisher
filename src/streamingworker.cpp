@@ -37,12 +37,9 @@ void StreamingWorker::initialize()
 #endif
 
     m_segmentation_manager->setAdapterNumber(m_adapterNumber);
-//    m_segmentation_manager->addPid(PMT_PID, 66);
-//    m_segmentation_manager->addPid(VIDEO_PID, 69);
-//    m_segmentation_manager->addPid(AUDIO_PID, 68);
-    m_segmentation_manager->addPid(PMT_PID, 1300);
-    m_segmentation_manager->addPid(VIDEO_PID, 1301);
-    m_segmentation_manager->addPid(AUDIO_PID, 1302);
+    m_segmentation_manager->addPid(PMT_PID, 528);
+    m_segmentation_manager->addPid(VIDEO_PID, 538);
+    m_segmentation_manager->addPid(AUDIO_PID, 548);
 }
 
 int StreamingWorker::adapterNumber() const

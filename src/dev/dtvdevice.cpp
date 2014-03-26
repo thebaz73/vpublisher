@@ -169,7 +169,10 @@ void DTVDevice::setAdapterNumber(int adapterNumber)
 
 int DTVDevice::configure(DeviceSettings *settings)
 {
-    qDebug("Applying configuration to device: %s", qPrintable(name()));
+    qDebug("Applying configuration [Frequency: %dKhz, Bandwidth: %dMhz] to device: %s",
+           settings->value("frequency").toInt()/1000,
+           settings->value("bandwidth").toInt()/1000000,
+           qPrintable(name()));
     int retCode = 0;
     int dev_fd = ::open(qPrintable(frontendNode()), O_WRONLY);
     if(dev_fd < 0) {
@@ -225,19 +228,30 @@ int DTVDevice::configure(DeviceSettings *settings)
                 qWarning("Error executing ioctl on %s: %d", qPrintable(frontendNode()), errno);
                 retCode = -3;
             }
-            for (int i = 0; i < 10; i++) {
-                Sleeper::msleep(100);
+            u_int16_t fe_snr, fe_signal;
+            u_int32_t fe_ber, fe_ub;
+            for (int i = 0; i < settings->value("retries", 10).toInt(); i++) {
+                Sleeper::msleep(settings->value("timeout", 1000).toInt());
                 if(ioctl(dev_fd, FE_READ_STATUS, &status) >= 0) {
+                    ioctl( dev_fd, FE_READ_SIGNAL_STRENGTH, &fe_signal );
+                    ioctl( dev_fd, FE_READ_SNR, &fe_snr );
+                    ioctl( dev_fd, FE_READ_BER, &fe_ber );
+                    ioctl( dev_fd, FE_READ_UNCORRECTED_BLOCKS, &fe_ub );
+
+                    qDebug("Device: %s status: %02X | signal: %04X | snr: %04X | "
+                        "ber: %08X | unc: %08X | %s", qPrintable(name()),
+                        status, fe_signal, fe_snr, fe_ber, fe_ub,
+                        status & FE_HAS_LOCK ? "FE_HAS_LOCK" : "" );
                     if(status == 31) {
                         m_status = LOCKED;
-                        qDebug("Device: %s signal locked (code: %d).", qPrintable(name()), status);
+                        qDebug("Device: %s signal locked (code: %02X).", qPrintable(name()), status);
                         break;
                     }
                 }
             }
             if(status != 31) {
                 m_status = CONFIGURED;
-                qWarning("Device: %s signal not locked (code: %d).", qPrintable(name()), status);
+                qWarning("Device: %s signal not locked (code: %02X).", qPrintable(name()), status);
                 retCode = -FE_HAS_LOCK;
             }
             showInfo(dev_fd);
