@@ -81,7 +81,7 @@ void LifecycleManager::stop(int adapter_no)
 {
     if(m_worker_map.contains(adapter_no)) {
         StreamingWorker *worker = m_worker_map.value(adapter_no);
-        worker->stop();
+        worker->stopWorker();
     }
 }
 

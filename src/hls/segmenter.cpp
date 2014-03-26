@@ -75,6 +75,7 @@ int Segmenter::doRead(quint8 *buf, int buf_size)
 {
     int packet_number = buf_size / TS_PACKET_SIZE;
     int packet_count = 0;
+    int filtered_packet_count = 0;
 
     unsigned char *packet;
 #ifdef USING_PIPE
@@ -108,11 +109,12 @@ int Segmenter::doRead(quint8 *buf, int buf_size)
         packet = buffer + (packet_count * TS_ENVELOPE_SIZE);
         u_int16_t pid = ((u_int16_t)(packet[1] & 0x1f) << 8) + packet[2];
         if(pid == PAT_PID || pid == m_config.pmt_pid || pid == m_config.video_pid || pid == m_config.audio_pid) {
-            memcpy(&buf[packet_count * TS_PACKET_SIZE], packet, TS_PACKET_SIZE);
+            memcpy(&buf[filtered_packet_count * TS_PACKET_SIZE], packet, TS_PACKET_SIZE);
+            filtered_packet_count++;
         }
     }
 
-    return packet_count * TS_PACKET_SIZE;
+    return filtered_packet_count * TS_PACKET_SIZE;
 #endif
 }
 

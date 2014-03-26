@@ -14,6 +14,7 @@ SegmentationManager::SegmentationManager(Type type, QObject *parent) :
     m_encodingProfile(""),
     m_dtv_device(NULL)
 {
+    onUpdateConfiguration();
 }
 
 SegmentationManager::Type SegmentationManager::type() const
@@ -99,6 +100,10 @@ int SegmentationManager::exitCode() const
 void SegmentationManager::addPid(PidType type, int pid)
 {
     pids.insert(type, pid);
+}
+
+void SegmentationManager::onUpdateConfiguration()
+{
 }
 
 void SegmentationManager::onSegmenterExitCode(int exitCode)

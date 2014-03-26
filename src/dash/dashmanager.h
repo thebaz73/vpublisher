@@ -12,10 +12,8 @@ public:
 
     virtual void startSegmentation();
     virtual void stopSegmentation();
-protected:
-    virtual unsigned int currentSegmentIndex() const;
-signals:
 public slots:
+    virtual void onUpdateConfiguration();
 };
 
 #endif // DASHMANAGER_H

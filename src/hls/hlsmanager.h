@@ -16,7 +16,7 @@ public:
     virtual void startSegmentation();
     virtual void stopSegmentation();
 public slots:
-    void onUpdateConfiguration();
+    virtual void onUpdateConfiguration();
 protected:
 
 private:

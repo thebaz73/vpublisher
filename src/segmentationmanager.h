@@ -53,7 +53,7 @@ signals:
     void finished();
     void segmentChanged(QString fileName, double segmentLength);
 public slots:
-    virtual void onUpdateConfiguration() = 0;
+    virtual void onUpdateConfiguration();
     void onSegmenterExitCode(int exitCode);
     void onSegmentIndexChanged(int segmentIndex, double segmentLength);
 protected:

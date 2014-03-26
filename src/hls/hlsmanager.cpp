@@ -6,11 +6,10 @@
 #include "../configurationmanager.h"
 
 HLSManager::HLSManager(QObject *parent) :
-    SegmentationManager(APPLE_HLS, parent)
+    SegmentationManager(APPLE_HLS, parent),
+    m_segmenter(NULL)
 {
     onUpdateConfiguration();
-    m_segmenter = new Segmenter();
-    connect(m_segmenter, SIGNAL(segmentIndexChanged(int,double)), this, SLOT(onSegmentIndexChanged(int,double)));
 }
 
 HLSManager::~HLSManager()
@@ -37,10 +36,12 @@ void HLSManager::startSegmentation()
     config.video_pid = pids.value(VIDEO_PID);
     config.audio_pid = pids.value(AUDIO_PID);
 
+    m_segmenter = new Segmenter();
     m_segmenter->configure(m_adapter_no, config);
 #ifdef USING_DEVICE
     m_segmenter->setDtvDevice(m_dtv_device);
 #endif
+    connect(m_segmenter, SIGNAL(segmentIndexChanged(int,double)), this, SLOT(onSegmentIndexChanged(int,double)));
 
     QThread* thread = new QThread();
     m_segmenter->moveToThread(thread);

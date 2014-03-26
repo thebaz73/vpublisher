@@ -22,7 +22,7 @@ public:
     DTVDevice *device() const;
     void setDevice(DTVDevice *device);
 
-    void stop();
+    void stopWorker();
 signals:
     void exitStatus(int status);
 

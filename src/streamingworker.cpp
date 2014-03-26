@@ -65,7 +65,7 @@ void StreamingWorker::setDevice(DTVDevice *device)
     m_device = device;
 }
 
-void StreamingWorker::stop()
+void StreamingWorker::stopWorker()
 {
     m_segmentation_manager->stopSegmentation();
 }

@@ -7,6 +7,7 @@
 DashManager::DashManager(QObject *parent) :
     SegmentationManager(MPEG_DASH, parent)
 {
+    onUpdateConfiguration();
 }
 
 DashManager::~DashManager()
@@ -23,7 +24,7 @@ void DashManager::stopSegmentation()
 
 }
 
-unsigned int DashManager::currentSegmentIndex() const
+void DashManager::onUpdateConfiguration()
 {
-    return 0;
+
 }
